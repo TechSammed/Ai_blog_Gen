@@ -62,4 +62,4 @@ The API will now be accessible at `http://127.0.0.1:8000/api/generate`.
 ### API Keys Required
 - **GROQ_API_KEY**: Required for interacting with the LangChain Mixtral language model. Without this key, the engine will safely fallback to a deterministic generation path. Store it in `.env` within the backend folder.
 
-nothing
+
