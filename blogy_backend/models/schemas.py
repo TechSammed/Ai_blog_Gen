@@ -24,6 +24,7 @@ class Prediction(BaseModel):
     estimated_monthly_traffic: int
 
 class SeoScore(BaseModel):
+    """Internal model used by seo.py validator. Flattened into Blog for API response."""
     seo_score: int
     keyword_density: float
     readability_score: int
@@ -40,9 +41,16 @@ class PlatformFormats(BaseModel):
     hashnode: str
 
 class Blog(BaseModel):
+    """Blog with FLAT SEO fields — no nested seo_score object."""
     title: str
     content: str
-    seo_score: Optional[SeoScore] = None
+    seo_score: int = 0
+    keyword_density: float = 0.0
+    readability_score: int = 0
+    ai_detection_score: int = 0
+    snippet_readiness: bool = False
+    humanization_score: int = 0
+    featured_snippet: str = ""
     platform_formats: Optional[PlatformFormats] = None
 
 class ImprovementsMapping(BaseModel):
@@ -73,10 +81,10 @@ class PipelineState(BaseModel):
     keyword_analysis: Optional[KeywordAnalysis] = None
     gap: Optional[SerpGap] = None
     prediction: Optional[Prediction] = None
-    
+
     # Internal state holds the blogs before they get seo and platforms added
     raw_blogs: list[dict[str, str]] = Field(default_factory=list)
     blogs: list[Blog] = Field(default_factory=list)
-    
+
     blogy_analysis: Optional[BlogyAnalysis] = None
     error: Optional[str] = None

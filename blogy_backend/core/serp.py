@@ -36,18 +36,26 @@ async def analyze_serp(keyword: str) -> SerpGap:
         llm = ChatGroq(
             api_key=os.getenv("GROQ_API_KEY", ""),
             model="llama-3.1-8b-instant",
-            temperature=0.5,
+            temperature=0.3,
+            max_tokens=1000,
         )
 
         prompt = (
-            f"You are an elite SEO SERP analyzer.\n"
-            f"Analyze this specific optimized keyword: '{keyword}'.\n\n"
-            f"Rules:\n"
-            f"1. Generate exactly 5 'missing_topics' that top-ranking pages currently fail to cover in depth.\n"
-            f"2. Generate exactly 5 'competitor_weakness' bullet points indicating where current SERP results fall short "
-            f"(e.g., 'No mobile-responsive layout', 'Slow page speed', 'No FAQ section').\n\n"
-            f"Return ONLY valid JSON matching this exact schema:\n"
-            f'{{"missing_topics": [...], "competitor_weakness": [...]}}'
+            "You are an SEO expert.\n\n"
+            "Return ONLY valid JSON.\n\n"
+            "Schema:\n"
+            '{\n'
+            '  "missing_topics": ["string"],\n'
+            '  "competitor_weakness": ["string"]\n'
+            '}\n\n'
+            "Rules:\n"
+            "- Minimum 5 items in each array\n"
+            "- No explanation\n"
+            "- No markdown\n"
+            "- No extra text\n"
+            "- No trailing commas\n"
+            "- Ensure valid JSON parsable by json.loads()\n\n"
+            f"Input keyword: {keyword}"
         )
 
         # Try structured output first

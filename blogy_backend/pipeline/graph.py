@@ -46,7 +46,6 @@ async def keyword_node(state: PipelineState) -> dict[str, Any]:
     try:
         from core.keyword import expand_keywords
         result = await expand_keywords(state.keyword)
-        # Double-check: expand_keywords should never return None, but just in case
         if result is None:
             raise ValueError("expand_keywords returned None")
         print(f"✅ keyword_analysis.primary_keyword = {result.primary_keyword}")
@@ -117,7 +116,7 @@ async def generator_node(state: PipelineState) -> dict[str, Any]:
 
 
 async def seo_node(state: PipelineState) -> dict[str, Any]:
-    """Node 5 — SEO Validator. NEVER fails."""
+    """Node 5 — SEO Validator. Flattens SeoScore into Blog. NEVER fails."""
     print(f"\n{'='*60}")
     print(f"🔍 Node 5: SEO Validator")
     kw = state.keyword_analysis.primary_keyword if state.keyword_analysis else "AI blog automation"
@@ -125,34 +124,47 @@ async def seo_node(state: PipelineState) -> dict[str, Any]:
     for i, raw in enumerate(state.raw_blogs):
         try:
             from core.seo import validate_seo
-            seo_score = await validate_seo(raw["content"], kw)
-            blogs.append(Blog(title=raw["title"], content=raw["content"], seo_score=seo_score, platform_formats=None))
-            print(f"  ✅ Blog {i+1} SEO score: {seo_score.seo_score}")
+            seo = await validate_seo(raw["content"], kw)
+            # Flatten SeoScore fields directly into Blog
+            blogs.append(Blog(
+                title=raw["title"],
+                content=raw["content"],
+                seo_score=seo.seo_score,
+                keyword_density=seo.keyword_density,
+                readability_score=seo.readability_score,
+                ai_detection_score=seo.ai_detection_score,
+                snippet_readiness=seo.snippet_readiness,
+                humanization_score=seo.humanization_score,
+                featured_snippet=seo.featured_snippet,
+                platform_formats=None,
+            ))
+            print(f"  ✅ Blog {i+1} SEO score: {seo.seo_score} | density: {seo.keyword_density}%")
         except Exception as exc:
             print(f"  ⚠️ Blog {i+1} SEO validation failed: {exc}")
-            blogs.append(Blog(title=raw["title"], content=raw["content"], seo_score=None, platform_formats=None))
+            blogs.append(Blog(title=raw["title"], content=raw["content"]))
     return {"blogs": blogs}
 
 
 async def export_node(state: PipelineState) -> dict[str, Any]:
-    """Node 6 — Platform Adaptation. Runs ALL blogs in PARALLEL. NEVER fails."""
+    """Node 6 — Platform Adaptation. Runs SEQUENTIALLY to avoid rate limits. NEVER fails."""
     import asyncio
     print(f"\n{'='*60}")
-    print(f"🌐 Node 6: Platform Adaptation (PARALLEL)")
+    print(f"🌐 Node 6: Platform Adaptation (SEQUENTIAL)")
 
-    async def _export_one(i: int, blog: Blog) -> Blog:
+    updated_blogs = []
+    for i, blog in enumerate(state.blogs):
+        if i > 0:
+            print(f"  ⏳ Waiting 1.5s before next export...")
+            await asyncio.sleep(1.5)
         try:
             from core.exporter import format_for_platforms
             formats = await format_for_platforms(blog.title, blog.content)
             print(f"  ✅ Blog {i+1} exported to 5 platforms")
-            return blog.model_copy(update={"platform_formats": formats})
+            updated_blogs.append(blog.model_copy(update={"platform_formats": formats}))
         except Exception as exc:
             print(f"  ⚠️ Blog {i+1} export failed: {exc}")
-            return blog
+            updated_blogs.append(blog)
 
-    # 🚀 Run all exports concurrently
-    tasks = [_export_one(i, blog) for i, blog in enumerate(state.blogs)]
-    updated_blogs = list(await asyncio.gather(*tasks))
     return {"blogs": updated_blogs}
 
 
@@ -167,7 +179,6 @@ async def blogy_node(state: PipelineState) -> dict[str, Any]:
         return {"blogy_analysis": result}
     except Exception as exc:
         print(f"❌ blogy_node exception: {exc}")
-        # Import and create a minimal fallback
         from models.schemas import BlogyAnalysis, ImprovementsMapping
         return {"blogy_analysis": BlogyAnalysis(
             ux_issues=["Dashboard needs improvement"],

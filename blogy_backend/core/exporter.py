@@ -13,7 +13,7 @@ def _get_llm():
         api_key=os.environ.get("GROQ_API_KEY", ""),
         model="llama-3.1-8b-instant",
         temperature=0.6,
-        max_tokens=8000,
+        max_tokens=4000,
     )
 
 
@@ -23,10 +23,10 @@ def _truncate(text: str, max_chars: int = 3000) -> str:
 
 
 async def format_for_platforms(title: str, content: str) -> PlatformFormats:
-    """Generate FULL, COPY-PASTE READY content for each platform.
-    
-    NOT truncated snippets — returns complete, publishable text.
-    Each platform version is uniquely adapted in tone, structure, and format.
+    """Generate platform-adapted content for 5 platforms.
+
+    Each platform version is 200-300 words, uniquely adapted.
+    Returns valid JSON with proper escaping.
     """
     # Shortcut fallback if no API key
     if not os.environ.get("GROQ_API_KEY"):
@@ -35,50 +35,37 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
     from langchain_core.prompts import ChatPromptTemplate
     llm = _get_llm()
 
-    truncated_content = _truncate(content, 2800)
+    truncated_content = _truncate(content, 2500)
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", textwrap.dedent("""\
-            You are an expert multi-platform content repurposer.
-
-            CRITICAL RULES:
-            - Return FULL-LENGTH, COPY-PASTE READY content for each platform
-            - Each version must be UNIQUELY adapted — different wording, structure, tone
-            - Do NOT truncate or cut content short
-            - Do NOT return JSON-like snippets — return real, publishable text
-            - Each platform version should be 400-800 words minimum
-        """)),
+        ("system", "You are a multi-platform content repurposer. Return ONLY valid JSON."),
         ("human", textwrap.dedent("""\
-            Rewrite this blog for 5 platforms. Each must be FULL-LENGTH and COPY-PASTE READY.
+            Convert this blog into platform formats.
 
             Original Title: {title}
             Original Content: {content}
 
-            Return a JSON object with these 5 keys. Each value must be the COMPLETE, ready-to-publish text:
+            Return ONLY valid JSON:
 
-            "medium": Write in storytelling format. Start with an emotional or narrative hook.
-            Use medium-length paragraphs. Include personal insights. End with a call to engage.
-            Format cleanly. MINIMUM 500 words.
+            {{
+              "medium": "string",
+              "linkedin": "string",
+              "wordpress": "string",
+              "devto": "string",
+              "hashnode": "string"
+            }}
 
-            "linkedin": Professional authority tone. Start with a bold hook statement.
-            Short paragraphs (1-2 sentences each). Use 2-3 emojis sparingly.
-            Include 3 actionable takeaways as bullet points. End with a question for engagement.
-            Add relevant hashtags. MINIMUM 400 words.
-
-            "wordpress": Full SEO-optimized version. Start with:
-            <!-- Meta Title: ... -->
-            <!-- Meta Description: ... -->
-            <!-- Focus Keyword: ... -->
-            Then the full blog with H2/H3 headings, FAQ schema, and author bio.
-            MINIMUM 600 words.
-
-            "devto": Start with YAML frontmatter (title, published, tags).
-            Developer-friendly tone. Clean markdown. Include config examples or
-            technical details where relevant. MINIMUM 500 words.
-
-            "hashnode": Start with a "## TL;DR" summary (3-4 bullet points).
-            Then the full article with clean markdown. Community-focused tone.
-            End with discussion prompts. MINIMUM 500 words.
+            Rules:
+            - Each field max 200-300 words
+            - No markdown formatting in values
+            - No explanation outside JSON
+            - Escape quotes properly
+            - Valid JSON only — parsable by json.loads()
+            - medium: storytelling hook, personal insights
+            - linkedin: professional tone, bold hook, 2-3 emojis, hashtags
+            - wordpress: SEO meta comments then content
+            - devto: YAML frontmatter then content
+            - hashnode: TL;DR bullets then content
         """)),
     ])
 
@@ -116,36 +103,32 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
 
 def _make_fallback(title: str, content: str) -> PlatformFormats:
     """Create decent fallback platform versions from the original content."""
-    # Remove markdown headings for cleaner platform adaptation
     clean = content.replace("# ", "").replace("## ", "").replace("### ", "")
+    short = clean[:800]
 
     return PlatformFormats(
         medium=(
-            f"# {title}\n\n"
-            f"{content}\n\n"
-            f"---\n\n"
-            f"*If this resonated with you, follow for more insights on AI and content marketing. "
-            f"Originally published on Blogy.*"
+            f"{title}\n\n"
+            f"{short}\n\n"
+            f"If this resonated with you, follow for more insights on AI and content marketing. "
+            f"Originally published on Blogy."
         ),
         linkedin=(
             f"🚀 {title}\n\n"
-            f"{clean[:1500]}\n\n"
+            f"{short[:500]}\n\n"
             f"💡 Key Takeaways:\n"
             f"• AI-powered blogging saves 70% of content creation time\n"
             f"• SEO-optimized content drives sustainable organic traffic\n"
             f"• Multi-platform publishing maximizes reach\n\n"
-            f"What's your experience with AI content tools? Drop your thoughts below 👇\n\n"
+            f"What's your experience with AI content tools? 👇\n\n"
             f"#AI #SEO #ContentMarketing #Blogging #MarTech"
         ),
         wordpress=(
             f"<!-- Meta Title: {title[:60]} -->\n"
             f"<!-- Meta Description: {clean[:155]} -->\n"
             f"<!-- Focus Keyword: {title.split()[0]} -->\n\n"
-            f"{content}\n\n"
-            f"---\n\n"
-            f"**About the Author**: This post was generated by Blogy's AI Blog Engine — "
-            f"combining keyword intelligence, SERP gap analysis, and SEO validation "
-            f"into a single automated pipeline."
+            f"{short}\n\n"
+            f"About the Author: This post was generated by Blogy's AI Blog Engine."
         ),
         devto=(
             f"---\n"
@@ -153,21 +136,17 @@ def _make_fallback(title: str, content: str) -> PlatformFormats:
             f"published: true\n"
             f"tags: seo, ai, blogging, contentmarketing\n"
             f"---\n\n"
-            f"{content}\n\n"
-            f"---\n\n"
-            f"*Built with Blogy — India's AI Blog Automation Platform.*"
+            f"{short}\n\n"
+            f"Built with Blogy — India's AI Blog Automation Platform."
         ),
         hashnode=(
-            f"## TL;DR\n\n"
+            f"TL;DR\n\n"
             f"- AI blog automation saves time and money\n"
             f"- SEO-optimized content ranks better on Google\n"
-            f"- Multi-platform publishing maximizes content ROI\n"
-            f"- Blogy handles the entire pipeline from keyword to publish\n\n"
-            f"---\n\n"
-            f"# {title}\n\n"
-            f"{content}\n\n"
-            f"---\n\n"
-            f"**What do you think about AI-powered content creation?** "
+            f"- Multi-platform publishing maximizes content ROI\n\n"
+            f"{title}\n\n"
+            f"{short}\n\n"
+            f"What do you think about AI-powered content creation? "
             f"Share your experience in the comments!"
         ),
     )

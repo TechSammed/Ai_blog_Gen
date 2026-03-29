@@ -38,15 +38,17 @@ def _flesch_reading_ease(text: str) -> float:
     return 206.835 - 1.015 * (wc / sc) - 84.6 * (syllables / wc)
 
 def _keyword_density(text: str, keyword: str) -> float:
-    """Compute keyword density as a percentage."""
-    text_lower = text.lower()
-    kw_lower = keyword.lower()
+    """Compute keyword density as a percentage using robust regex matching."""
+    content = text.lower()
+    kw = keyword.lower().strip()
+    if not kw:
+        return 0.0
     wc = _word_count(text)
     if wc == 0:
         return 0.0
-    occurrences = text_lower.count(kw_lower)
-    kw_word_count = len(kw_lower.split())
-    return round((occurrences * kw_word_count / wc) * 100, 2)
+    matches = len(re.findall(re.escape(kw), content))
+    kw_word_count = len(kw.split())
+    return round((matches * kw_word_count / wc) * 100, 2)
 
 def _ai_detection_score(text: str) -> int:
     """Simulated AI detection: lower = more human-like."""

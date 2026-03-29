@@ -53,6 +53,7 @@ async def generate_blog(payload: KeywordInput):
     """Run the full AI Blog Intelligence pipeline.
 
     NEVER throws — always returns structured JSON with status field.
+    Blog SEO fields are FLAT (no nested seo_score object).
     """
     warnings: list[str] = []
 
@@ -72,7 +73,6 @@ async def generate_blog(payload: KeywordInput):
         )
 
     # ---------- Extract with fallbacks ----------
-    # State from LangGraph can be dict or object
     def _get(field: str, fallback):
         if isinstance(state, dict):
             val = state.get(field)
