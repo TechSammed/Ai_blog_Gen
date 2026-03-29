@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-import math
 import re
 
 from models.schemas import SeoScore
 
-
 def _word_count(text: str) -> int:
     return len(text.split())
 
-
 def _sentence_count(text: str) -> int:
     return max(1, len(re.split(r"[.!?]+", text)))
-
 
 def _syllable_count(word: str) -> int:
     """Rough syllable estimator (English)."""
@@ -31,7 +27,6 @@ def _syllable_count(word: str) -> int:
         count -= 1
     return max(1, count)
 
-
 def _flesch_reading_ease(text: str) -> float:
     """Return Flesch Reading Ease score (0-100, higher = easier)."""
     words = text.split()
@@ -41,7 +36,6 @@ def _flesch_reading_ease(text: str) -> float:
     if wc == 0 or sc == 0:
         return 50.0
     return 206.835 - 1.015 * (wc / sc) - 84.6 * (syllables / wc)
-
 
 def _keyword_density(text: str, keyword: str) -> float:
     """Compute keyword density as a percentage."""
@@ -54,12 +48,8 @@ def _keyword_density(text: str, keyword: str) -> float:
     kw_word_count = len(kw_lower.split())
     return round((occurrences * kw_word_count / wc) * 100, 2)
 
-
 def _ai_detection_score(text: str) -> int:
-    """Simulated AI detection: lower = more human-like.
-
-    Heuristic: penalise overuse of generic AI phrases.
-    """
+    """Simulated AI detection: lower = more human-like."""
     ai_phrases = [
         "in today's world",
         "it's important to note",
@@ -74,35 +64,27 @@ def _ai_detection_score(text: str) -> int:
     ]
     text_lower = text.lower()
     hits = sum(1 for p in ai_phrases if p in text_lower)
-    # 0 hits → score 15 (very human), many hits → score 80+
     return min(95, 15 + hits * 8)
-
 
 def _humanization_score(ai_score: int) -> int:
     """Inverse of AI detection — higher = more human."""
     return max(5, 100 - ai_score)
 
-
 def _snippet_readiness(text: str) -> bool:
     """Check whether the blog contains FAQ-style Q&A suitable for snippets."""
     return bool(re.search(r"(##\s*Q:|###\s*Q:|<h[23]>Q:)", text, re.IGNORECASE))
-
 
 def _extract_featured_snippet(text: str, keyword: str) -> str:
     """Pull out the best candidate paragraph for a featured snippet."""
     kw_lower = keyword.lower()
     paragraphs = [p.strip() for p in text.split("\n\n") if len(p.strip()) > 60]
-    # Prefer paragraphs containing the keyword
     for p in paragraphs:
         if kw_lower in p.lower() and not p.startswith("#"):
-            # Truncate to ~300 chars for snippet
             return p[:300].rsplit(" ", 1)[0] + "…" if len(p) > 300 else p
     return paragraphs[0][:300] if paragraphs else ""
 
-
 async def validate_seo(blog: str, keyword: str) -> SeoScore:
     """Run the full SEO validation suite and return aggregated scores."""
-
     density = _keyword_density(blog, keyword)
     flesch = _flesch_reading_ease(blog)
     readability = max(0, min(100, int(flesch)))
@@ -110,7 +92,6 @@ async def validate_seo(blog: str, keyword: str) -> SeoScore:
     human_score = _humanization_score(ai_score)
     snippet_ok = _snippet_readiness(blog)
     snippet_text = _extract_featured_snippet(blog, keyword)
-
 
     density_score = 100 - abs(density - 1.5) * 30  # ideal ≈ 1.5%
     snippet_bonus = 10 if snippet_ok else 0

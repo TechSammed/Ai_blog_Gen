@@ -1,126 +1,173 @@
 from __future__ import annotations
 
-import re
+import json
+import os
 import textwrap
 
 from models.schemas import PlatformFormats
 
 
-def _strip_headings_to_level(text: str, max_level: int) -> str:
-    """Downgrade headings deeper than *max_level* to bold text."""
-    lines = []
-    for line in text.split("\n"):
-        m = re.match(r"^(#{1,6})\s+(.*)", line)
-        if m and len(m.group(1)) > max_level:
-            lines.append(f"**{m.group(2)}**")
-        else:
-            lines.append(line)
-    return "\n".join(lines)
-
-
-def _extract_title(blog: str) -> str:
-    m = re.search(r"^#\s+(.+)", blog, re.MULTILINE)
-    return m.group(1).strip() if m else "Untitled"
-
-
-def _truncate(text: str, max_chars: int) -> str:
-    if len(text) <= max_chars:
-        return text
-    return text[:max_chars].rsplit(" ", 1)[0] + "…"
-
-
-
-
-def _format_medium(blog: str) -> str:
-    """Medium: keep markdown, add publication header and tags footer."""
-    title = _extract_title(blog)
-    tags = "#SEO #DigitalMarketing #ContentStrategy #India #Blogging"
-    header = (
-        f"*Originally published on the AI Blog Intelligence Engine*\n\n"
-        f"---\n\n"
+def _get_llm():
+    from langchain_groq import ChatGroq
+    return ChatGroq(
+        api_key=os.environ.get("GROQ_API_KEY", ""),
+        model="llama-3.1-8b-instant",
+        temperature=0.6,
+        max_tokens=8000,
     )
-    footer = (
-        f"\n\n---\n\n"
-        f"**If you found this useful, give it a 👏 and follow for more!**\n\n"
-        f"{tags}"
-    )
-    return header + blog + footer
 
 
-def _format_linkedin(blog: str) -> str:
-    """LinkedIn: conversational hook + condensed version (<3 000 chars)."""
-    title = _extract_title(blog)
-    # Extract first 2 substantial paragraphs for the post body
-    paragraphs = [p.strip() for p in blog.split("\n\n") if len(p.strip()) > 40 and not p.startswith("#")]
-    body = "\n\n".join(paragraphs[:4])
-    body = _truncate(body, 2500)
-
-    return textwrap.dedent(f"""\
-🚀 {title}
-
-{body}
-
-💡 Key takeaway: mastering this topic today gives you a head start that competitors will struggle to catch up with.
-
-👉 Drop a comment if you want the full guide!
-
-#SEO #ContentMarketing #DigitalIndia #StartupGrowth #AI
-""")
+def _truncate(text: str, max_chars: int = 3000) -> str:
+    """Safely truncate text for prompts while keeping it meaningful."""
+    return text[:max_chars] if len(text) > max_chars else text
 
 
-def _format_wordpress(blog: str) -> str:
-    """WordPress: full HTML-ready markdown + Yoast-friendly meta block."""
-    title = _extract_title(blog)
-    meta = textwrap.dedent(f"""\
-<!--
-SEO Title: {title}
-Meta Description: A comprehensive guide to {title.lower()} — strategies, tools, and actionable tips for the Indian market.
-Focus Keyword: {title.split(':')[0].strip().lower() if ':' in title else title.lower()}
--->
+async def format_for_platforms(title: str, content: str) -> PlatformFormats:
+    """Generate FULL, COPY-PASTE READY content for each platform.
+    
+    NOT truncated snippets — returns complete, publishable text.
+    Each platform version is uniquely adapted in tone, structure, and format.
+    """
+    # Shortcut fallback if no API key
+    if not os.environ.get("GROQ_API_KEY"):
+        return _make_fallback(title, content)
 
-""")
-    return meta + blog
+    from langchain_core.prompts import ChatPromptTemplate
+    llm = _get_llm()
+
+    truncated_content = _truncate(content, 2800)
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", textwrap.dedent("""\
+            You are an expert multi-platform content repurposer.
+
+            CRITICAL RULES:
+            - Return FULL-LENGTH, COPY-PASTE READY content for each platform
+            - Each version must be UNIQUELY adapted — different wording, structure, tone
+            - Do NOT truncate or cut content short
+            - Do NOT return JSON-like snippets — return real, publishable text
+            - Each platform version should be 400-800 words minimum
+        """)),
+        ("human", textwrap.dedent("""\
+            Rewrite this blog for 5 platforms. Each must be FULL-LENGTH and COPY-PASTE READY.
+
+            Original Title: {title}
+            Original Content: {content}
+
+            Return a JSON object with these 5 keys. Each value must be the COMPLETE, ready-to-publish text:
+
+            "medium": Write in storytelling format. Start with an emotional or narrative hook.
+            Use medium-length paragraphs. Include personal insights. End with a call to engage.
+            Format cleanly. MINIMUM 500 words.
+
+            "linkedin": Professional authority tone. Start with a bold hook statement.
+            Short paragraphs (1-2 sentences each). Use 2-3 emojis sparingly.
+            Include 3 actionable takeaways as bullet points. End with a question for engagement.
+            Add relevant hashtags. MINIMUM 400 words.
+
+            "wordpress": Full SEO-optimized version. Start with:
+            <!-- Meta Title: ... -->
+            <!-- Meta Description: ... -->
+            <!-- Focus Keyword: ... -->
+            Then the full blog with H2/H3 headings, FAQ schema, and author bio.
+            MINIMUM 600 words.
+
+            "devto": Start with YAML frontmatter (title, published, tags).
+            Developer-friendly tone. Clean markdown. Include config examples or
+            technical details where relevant. MINIMUM 500 words.
+
+            "hashnode": Start with a "## TL;DR" summary (3-4 bullet points).
+            Then the full article with clean markdown. Community-focused tone.
+            End with discussion prompts. MINIMUM 500 words.
+        """)),
+    ])
+
+    # Strategy 1: Structured output
+    try:
+        structured_llm = llm.with_structured_output(PlatformFormats)
+        result = await structured_llm.ainvoke(
+            prompt.format_messages(title=title, content=truncated_content)
+        )
+        if result is not None:
+            print(f"✅ Platform formats generated (structured): {title[:40]}...")
+            return result
+    except Exception as err:
+        print(f"⚠️ Structured platform output failed: {err}")
+
+    # Strategy 2: Raw LLM + JSON parse
+    try:
+        raw = await llm.ainvoke(
+            prompt.format_messages(title=title, content=truncated_content)
+        )
+        text = raw.content
+        if "{" in text:
+            json_str = text[text.index("{"):text.rindex("}") + 1]
+            data = json.loads(json_str)
+            result = PlatformFormats(**data)
+            print(f"✅ Platform formats generated (parsed): {title[:40]}...")
+            return result
+    except Exception as err:
+        print(f"⚠️ Platform JSON parse failed: {err}")
+
+    # Strategy 3: Fallback
+    print(f"🔄 Using fallback platform formats for: {title[:40]}...")
+    return _make_fallback(title, content)
 
 
-def _format_devto(blog: str) -> str:
-    """Dev.to: add front-matter block for their markdown editor."""
-    title = _extract_title(blog)
-    front_matter = textwrap.dedent(f"""\
----
-title: "{title}"
-published: true
-tags: seo, webdev, productivity, tutorial
-cover_image: ""
----
+def _make_fallback(title: str, content: str) -> PlatformFormats:
+    """Create decent fallback platform versions from the original content."""
+    # Remove markdown headings for cleaner platform adaptation
+    clean = content.replace("# ", "").replace("## ", "").replace("### ", "")
 
-""")
-    return front_matter + blog
-
-
-def _format_hashnode(blog: str) -> str:
-    """Hashnode: add front-matter + canonical URL placeholder."""
-    title = _extract_title(blog)
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
-    front_matter = textwrap.dedent(f"""\
----
-title: "{title}"
-slug: "{slug}"
-tags: seo, content-marketing, digital-india, ai-tools
-canonical: "https://yourdomain.com/blog/{slug}"
----
-
-""")
-    return front_matter + blog
-
-
-
-
-async def format_for_platforms(blog: str) -> PlatformFormats:
-    """Convert a single blog into five platform-specific formats."""
     return PlatformFormats(
-        medium=_format_medium(blog),
-        linkedin=_format_linkedin(blog),
-        wordpress=_format_wordpress(blog),
-        devto=_format_devto(blog),
-        hashnode=_format_hashnode(blog),
+        medium=(
+            f"# {title}\n\n"
+            f"{content}\n\n"
+            f"---\n\n"
+            f"*If this resonated with you, follow for more insights on AI and content marketing. "
+            f"Originally published on Blogy.*"
+        ),
+        linkedin=(
+            f"🚀 {title}\n\n"
+            f"{clean[:1500]}\n\n"
+            f"💡 Key Takeaways:\n"
+            f"• AI-powered blogging saves 70% of content creation time\n"
+            f"• SEO-optimized content drives sustainable organic traffic\n"
+            f"• Multi-platform publishing maximizes reach\n\n"
+            f"What's your experience with AI content tools? Drop your thoughts below 👇\n\n"
+            f"#AI #SEO #ContentMarketing #Blogging #MarTech"
+        ),
+        wordpress=(
+            f"<!-- Meta Title: {title[:60]} -->\n"
+            f"<!-- Meta Description: {clean[:155]} -->\n"
+            f"<!-- Focus Keyword: {title.split()[0]} -->\n\n"
+            f"{content}\n\n"
+            f"---\n\n"
+            f"**About the Author**: This post was generated by Blogy's AI Blog Engine — "
+            f"combining keyword intelligence, SERP gap analysis, and SEO validation "
+            f"into a single automated pipeline."
+        ),
+        devto=(
+            f"---\n"
+            f"title: {title}\n"
+            f"published: true\n"
+            f"tags: seo, ai, blogging, contentmarketing\n"
+            f"---\n\n"
+            f"{content}\n\n"
+            f"---\n\n"
+            f"*Built with Blogy — India's AI Blog Automation Platform.*"
+        ),
+        hashnode=(
+            f"## TL;DR\n\n"
+            f"- AI blog automation saves time and money\n"
+            f"- SEO-optimized content ranks better on Google\n"
+            f"- Multi-platform publishing maximizes content ROI\n"
+            f"- Blogy handles the entire pipeline from keyword to publish\n\n"
+            f"---\n\n"
+            f"# {title}\n\n"
+            f"{content}\n\n"
+            f"---\n\n"
+            f"**What do you think about AI-powered content creation?** "
+            f"Share your experience in the comments!"
+        ),
     )
