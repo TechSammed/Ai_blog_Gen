@@ -1,18 +1,18 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
 import BlogModal from '../ui/BlogModal';
-import ScoreRing from '../ui/ScoreRing';
 import {
-  Eye, Copy, CheckSquare
+  Eye, Copy, CheckSquare, PenLine, Award
 } from 'lucide-react';
 
+// Platform config without the icons
 const PLATFORM_CONFIG = {
-  medium: { label: 'Medium', icon: '📝', color: 'from-green-500/20 to-emerald-500/10 border-green-500/25 text-green-300' },
-  linkedin: { label: 'LinkedIn', icon: '💼', color: 'from-blue-600/20 to-sky-500/10 border-blue-500/25 text-blue-300' },
-  wordpress: { label: 'WordPress', icon: '🌐', color: 'from-indigo-500/20 to-blue-500/10 border-indigo-500/25 text-indigo-300' },
-  devto: { label: 'Dev.to', icon: '⚡', color: 'from-slate-500/20 to-gray-500/10 border-slate-500/25 text-slate-300' },
-  hashnode: { label: 'Hashnode', icon: '#️⃣', color: 'from-blue-400/20 to-cyan-400/10 border-blue-400/25 text-cyan-300' },
+  medium: { label: 'Medium', activeClass: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/5' },
+  linkedin: { label: 'LinkedIn', activeClass: 'text-blue-400 border-blue-500/30 bg-blue-500/5' },
+  wordpress: { label: 'WordPress', activeClass: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/5' },
+  devto: { label: 'Dev.to', activeClass: 'text-zinc-300 border-zinc-500/30 bg-zinc-500/5' },
+  hashnode: { label: 'Hashnode', activeClass: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/5' },
 };
 
 export default function BlogsSection() {
@@ -22,7 +22,8 @@ export default function BlogsSection() {
   const [copiedId, setCopiedId] = useState(null);
 
   const blogs = result?.blogs;
-  if (!blogs?.length) return <EmptyState icon="✍️" text="Generate a blog first to see your content" />;
+
+  if (!blogs?.length) return <EmptyState icon={<PenLine size={32} className="text-zinc-600 mb-4" />} text="Generate a blog first to see your content" />;
 
   const handleCopy = async (text, id) => {
     await navigator.clipboard.writeText(text);
@@ -39,26 +40,27 @@ export default function BlogsSection() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Summary row */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="glass-card rounded-xl p-4 text-center">
-          <div className="text-3xl font-black text-violet-300 mb-1">{blogs.length}</div>
-          <div className="text-slate-500 text-xs">Blogs Generated</div>
+    <div className="space-y-6 animate-in fade-in duration-500">
+
+      {/* ─── Summary Row ─── */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-4xl font-bold tracking-tight text-indigo-400 mb-1">{blogs.length}</div>
+          <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">Blogs Generated</div>
         </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <div className="text-3xl font-black text-blue-300 mb-1">5</div>
-          <div className="text-slate-500 text-xs">Export Platforms</div>
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-4xl font-bold tracking-tight text-blue-400 mb-1">5</div>
+          <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">Export Platforms</div>
         </div>
-        <div className="glass-card rounded-xl p-4 text-center">
-          <div className="text-3xl font-black text-emerald-300 mb-1">
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-4xl font-bold tracking-tight text-emerald-400 mb-1">
             {blogs.filter(b => b.seo_score).length}
           </div>
-          <div className="text-slate-500 text-xs">SEO Validated</div>
+          <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">SEO Validated</div>
         </div>
       </div>
 
-      {/* Blog cards */}
+      {/* ─── Blog Cards ─── */}
       <div className="space-y-5">
         {blogs.map((blog, idx) => {
           const seo = blog.seo_score;
@@ -67,110 +69,107 @@ export default function BlogsSection() {
           const contentToCopy = getBlogContent(blog);
           const wordCount = blog.content?.split(/\s+/).length ?? 0;
 
-          const BLOG_COLORS = [
-            'from-violet-500/15 to-purple-500/5 border-violet-500/25',
-            'from-blue-500/15 to-indigo-500/5 border-blue-500/25',
-            'from-orange-500/15 to-amber-500/5 border-orange-500/25',
-          ];
-
           return (
-            <div key={idx}
-              className={`glass-card rounded-2xl border bg-gradient-to-br ${BLOG_COLORS[idx % 3]} overflow-hidden`}
-            >
-              {/* Blog card header */}
-              <div className="p-5 pb-4">
-                <div className="flex items-start justify-between gap-4 mb-4">
+            <div key={idx} className="bg-[#0a0a0c] border border-white/5 rounded-2xl overflow-hidden shadow-sm group hover:border-white/10 transition-colors">
+
+              {/* Blog Card Header */}
+              <div className="p-6 pb-5">
+                <div className="flex items-start justify-between gap-6 mb-5">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Blog {idx + 1}</span>
-                      <span className="text-slate-600">·</span>
-                      <span className="text-[10px] text-slate-500">{wordCount.toLocaleString()} words</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Blog 0{idx + 1}</span>
+                      <span className="text-zinc-700">·</span>
+                      <span className="text-[11px] font-medium text-zinc-400">{wordCount.toLocaleString()} words</span>
                     </div>
-                    <h3 className="text-white font-bold text-base leading-tight line-clamp-2">{blog.title}</h3>
+                    <h3 className="text-zinc-100 font-bold text-lg leading-snug">{blog.title}</h3>
                   </div>
                   {seo && (
                     <div className="shrink-0">
-                      <ScoreRing value={seo.seo_score} max={100} size={64} small />
+                      <CleanScoreRing value={seo.seo_score} max={100} />
                     </div>
                   )}
                 </div>
 
-                {/* SEO metrics row */}
+                {/* SEO Metrics Row */}
                 {seo && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2.5 mb-6">
                     <SEOBadge label="Readability" value={`${seo.readability_score}`} good={seo.readability_score >= 60} />
-                    <SEOBadge label="AI Detection" value={`${seo.ai_detection_score}%`} good={seo.ai_detection_score <= 20} lower />
+                    <SEOBadge label="AI Detection" value={`${seo.ai_detection_score}%`} good={seo.ai_detection_score <= 20} />
                     <SEOBadge label="Humanization" value={`${seo.humanization_score}%`} good={seo.humanization_score >= 70} />
-                    <SEOBadge label="KW Density" value={`${seo.keyword_density?.toFixed(1)}%`} good={seo.keyword_density <= 2} lower />
+                    <SEOBadge label="KW Density" value={`${seo.keyword_density?.toFixed(1)}%`} good={seo.keyword_density <= 2} />
                     {seo.snippet_readiness && (
                       <SEOBadge label="Featured Snippet" value="Ready" good={true} />
                     )}
                   </div>
                 )}
 
-                {/* Platform tabs */}
+                {/* Platform Tabs (No Icons) */}
                 {hasPlatforms && (
-                  <div className="mb-4">
-                    <div className="text-[10px] text-slate-600 font-semibold uppercase tracking-widest mb-2">Export Format:</div>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="mb-6">
+                    <div className="text-[10px] text-zinc-500 font-semibold uppercase tracking-widest mb-3">Export Format</div>
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => setSelectedPlatform(p => ({ ...p, [blog.title]: null }))}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                          ${!activePlatform ? 'bg-white/[0.12] text-white border border-white/20' : 'bg-white/[0.04] text-slate-500 border border-white/[0.06] hover:border-white/[0.12]'}`}
+                        className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors border
+                          ${!activePlatform ? 'bg-zinc-800 text-zinc-100 border-zinc-600' : 'bg-zinc-900/50 text-zinc-400 border-white/5 hover:border-white/10 hover:text-zinc-200'}`}
                       >
                         Original
                       </button>
-                      {Object.entries(PLATFORM_CONFIG).map(([key, cfg]) => (
-                        blog.platform_formats?.[key] ? (
+
+                      {Object.entries(PLATFORM_CONFIG).map(([key, cfg]) => {
+                        return blog.platform_formats?.[key] ? (
                           <button
                             key={key}
                             onClick={() => setSelectedPlatform(p => ({ ...p, [blog.title]: key }))}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border
-                              ${activePlatform === key ? cfg.color + ' border-opacity-60' : 'bg-white/[0.04] text-slate-500 border-white/[0.06] hover:border-white/[0.12] hover:text-slate-300'}`}
+                            className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors border
+                              ${activePlatform === key ? cfg.activeClass : 'bg-zinc-900/50 text-zinc-400 border-white/5 hover:border-white/10 hover:text-zinc-200'}`}
                           >
-                            {cfg.icon} {cfg.label}
+                            {cfg.label}
                           </button>
-                        ) : null
-                      ))}
+                        ) : null;
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* Content preview */}
-                <div className="bg-black/20 rounded-xl p-4 mb-4 max-h-36 overflow-y-auto">
-                  <pre className="text-slate-400 text-xs leading-relaxed font-sans whitespace-pre-wrap line-clamp-5">
+                {/* Content Preview */}
+                <div className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 mb-5 max-h-40 overflow-y-auto">
+                  <pre className="text-zinc-400 text-sm leading-relaxed font-sans whitespace-pre-wrap line-clamp-4">
                     {contentToCopy?.slice(0, 400)}…
                   </pre>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button
                     onClick={() => setSelectedBlog({ blog, platform: activePlatform })}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-slate-300 hover:text-white text-sm border border-white/[0.08] transition-all"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-900 text-sm font-semibold transition-colors"
                   >
-                    <Eye size={14} />
+                    <Eye size={16} />
                     Read Full Blog
                   </button>
                   <button
                     onClick={() => handleCopy(contentToCopy, `${idx}-${activePlatform}`)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-slate-300 hover:text-white text-sm border border-white/[0.08] transition-all"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-sm font-medium border border-white/10 transition-colors"
                   >
                     {copiedId === `${idx}-${activePlatform}` ? (
-                      <><CheckSquare size={14} className="text-emerald-400" /> Copied!</>
+                      <><CheckSquare size={16} className="text-emerald-400" /> Copied</>
                     ) : (
-                      <><Copy size={14} /> Copy</>
+                      <><Copy size={16} /> Copy Content</>
                     )}
                   </button>
                 </div>
               </div>
 
-              {/* Featured snippet indicator */}
+              {/* Featured Snippet Indicator */}
               {seo?.featured_snippet && (
-                <div className="px-5 pb-4">
-                  <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3">
-                    <div className="text-violet-300 text-xs font-semibold mb-1">⭐ Featured Snippet Target</div>
-                    <p className="text-slate-400 text-xs leading-relaxed">{seo.featured_snippet.slice(0, 120)}…</p>
+                <div className="px-6 pb-6 pt-2">
+                  <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-4 flex items-start gap-3">
+                    <Award size={18} className="text-indigo-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-1.5">Featured Snippet Target</div>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{seo.featured_snippet.slice(0, 150)}…</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -179,25 +178,95 @@ export default function BlogsSection() {
         })}
       </div>
 
+      {/* ─── Properly Stacked & Centered Modal Wrapper ─── */}
       {selectedBlog && (
-        <BlogModal
-          blog={selectedBlog.blog}
-          platform={selectedBlog.platform}
-          onClose={() => setSelectedBlog(null)}
-        />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
+          {/* Complete screen backdrop blur */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedBlog(null)} />
+
+          {/* Centered Modal Card with constrained height */}
+          <div className="relative w-full max-w-4xl max-h-[85vh] z-10 bg-[#0a0a0c] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-white/5 bg-zinc-900/50 flex justify-between items-center shrink-0">
+              <h3 className="text-zinc-100 font-semibold">
+                {selectedBlog.platform ? PLATFORM_CONFIG[selectedBlog.platform]?.label + ' Format' : 'Original Format'}
+              </h3>
+              <button
+                onClick={() => setSelectedBlog(null)}
+                className="p-1 text-zinc-500 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content Area */}
+            <div className="overflow-y-auto w-full h-full p-6">
+              <BlogModal
+                blog={selectedBlog.blog}
+                platform={selectedBlog.platform}
+                onClose={() => setSelectedBlog(null)}
+              />
+            </div>
+
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function SEOBadge({ label, value, good, lower }) {
-  const isGood = lower ? good : good;
+// Flat, Clean SEO Badge
+function SEOBadge({ label, value, good }) {
   return (
-    <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border
-      ${isGood ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-300' : 'bg-red-500/10 border-red-500/25 text-red-300'}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${isGood ? 'bg-emerald-400' : 'bg-red-400'}`} />
-      <span className="text-slate-400">{label}:</span>
-      <span className="font-medium">{value}</span>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium border
+      ${good ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400' : 'bg-rose-500/5 border-rose-500/10 text-rose-400'}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${good ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+      <span className="text-zinc-500">{label}:</span>
+      <span className="text-zinc-200">{value}</span>
+    </div>
+  );
+}
+
+// Fixed Alignment Score Ring
+function CleanScoreRing({ value, max = 100 }) {
+  const radius = 24;
+  const stroke = 4;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (value / max) * circumference;
+
+  const ringColor = value >= 80 ? 'text-emerald-500' : value >= 60 ? 'text-amber-500' : 'text-rose-500';
+
+  return (
+    <div className="relative flex items-center justify-center w-12 h-12">
+      <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 absolute inset-0">
+        <circle
+          stroke="currentColor"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          className="text-zinc-800"
+        />
+        <circle
+          stroke="currentColor"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={circumference + ' ' + circumference}
+          style={{ strokeDashoffset }}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          className={`${ringColor} transition-all duration-1000 ease-out`}
+        />
+      </svg>
+      {/* Absolute inset-0 guarantees the text centers inside the ring perfectly */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-xs font-bold text-zinc-100">{value}</span>
+      </div>
     </div>
   );
 }

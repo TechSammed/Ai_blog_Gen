@@ -1,6 +1,9 @@
+import React from 'react';
 import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
-import { ShieldAlert, Lightbulb, Zap, ArrowRight, Info, Users } from 'lucide-react';
+import {
+  ShieldAlert, Lightbulb, Zap, ArrowRight, Info, Users, BarChart2, Layers
+} from 'lucide-react';
 
 export default function BlogySection() {
   const { result } = useApp();
@@ -9,11 +12,11 @@ export default function BlogySection() {
   if (!analysis) return <EmptyState icon="🧩" text="Generate a blog first to see dashboard analysis" />;
 
   const categories = [
-    { key: 'ux_issues', label: 'UX Issues', icon: <Users size={15} />, color: 'amber', emoji: '🎨' },
-    { key: 'seo_issues', label: 'SEO Issues', icon: <ShieldAlert size={15} />, color: 'red', emoji: '🔍' },
-    { key: 'conversion_gaps', label: 'Conversion Gaps', icon: <Zap size={15} />, color: 'orange', emoji: '💰' },
-    { key: 'technical_risks', label: 'Technical Risks', icon: <Info size={15} />, color: 'rose', emoji: '⚙️' },
-    { key: 'feature_suggestions', label: 'Feature Suggestions', icon: <Lightbulb size={15} />, color: 'violet', emoji: '💡' },
+    { key: 'ux_issues', label: 'UX Issues', icon: <Users size={16} />, color: 'amber' },
+    { key: 'seo_issues', label: 'SEO Issues', icon: <ShieldAlert size={16} />, color: 'red' },
+    { key: 'conversion_gaps', label: 'Conversion Gaps', icon: <Zap size={16} />, color: 'orange' },
+    { key: 'technical_risks', label: 'Technical Risks', icon: <Info size={16} />, color: 'rose' },
+    { key: 'feature_suggestions', label: 'Feature Suggestions', icon: <Lightbulb size={16} />, color: 'violet' },
   ];
 
   const colorMap = {
@@ -26,27 +29,33 @@ export default function BlogySection() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Top info cards */}
+      {/* ─── Top Info Cards ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="glass-card rounded-2xl p-5 border border-violet-500/20 bg-gradient-to-br from-violet-500/10 to-purple-500/5">
-          <div className="text-slate-400 text-xs mb-1 font-semibold uppercase tracking-wider">Product Differentiation</div>
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart2 size={14} className="text-violet-400" />
+            <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Product Differentiation</div>
+          </div>
           <div className="text-white font-semibold text-base leading-relaxed mt-2">{analysis.product_differentiation}</div>
         </div>
         <div className="glass-card rounded-2xl p-5 border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-cyan-500/5">
-          <div className="text-slate-400 text-xs mb-1 font-semibold uppercase tracking-wider">Scalability</div>
+          <div className="flex items-center gap-2 mb-1">
+            <Layers size={14} className="text-blue-400" />
+            <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Scalability</div>
+          </div>
           <div className="text-white font-semibold text-base leading-relaxed mt-2">{analysis.scalability}</div>
         </div>
       </div>
 
-      {/* Issue categories grid */}
+      {/* ─── Issue Categories Grid ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {categories.map(({ key, label, icon, color, emoji }) => {
+        {categories.map(({ key, label, icon, color }) => {
           const items = analysis[key] ?? [];
           const c = colorMap[color];
           return (
             <div key={key} className={`glass-card rounded-2xl p-5 border ${c.bg}`}>
               <div className={`flex items-center gap-2 mb-4 ${c.header}`}>
-                <span className="text-base">{emoji}</span>
+                {icon}
                 <h3 className="font-semibold text-sm">{label}</h3>
                 <span className={`ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold ${c.badge}`}>
                   {items.length}
@@ -68,14 +77,14 @@ export default function BlogySection() {
         })}
       </div>
 
-      {/* Improvements Mapping */}
+      {/* ─── Improvements Mapping ─── */}
       {analysis.improvements_mapping?.length > 0 && (
         <div className="glass-card rounded-2xl p-5">
           <h3 className="text-white font-semibold mb-5 flex items-center gap-2">
             <ArrowRight size={15} className="text-emerald-400" />
             Improvements Mapping
-            <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full ml-auto">
-              {analysis.improvements_mapping.length} mapped
+            <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full ml-auto font-medium">
+              {analysis.improvements_mapping.length} Mapped
             </span>
           </h3>
           <div className="space-y-3">
@@ -87,7 +96,7 @@ export default function BlogySection() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs text-red-400 font-semibold uppercase tracking-wider">Missing</span>
                   </div>
-                  <p className="text-slate-300 text-sm">{item.missing_feature}</p>
+                  <p className="text-slate-300 text-sm leading-relaxed">{item.missing_feature}</p>
                 </div>
                 <div className="shrink-0 flex items-center gap-2">
                   <ArrowRight size={16} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
@@ -96,36 +105,13 @@ export default function BlogySection() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Your Solution</span>
                   </div>
-                  <p className="text-emerald-300 text-sm font-medium">{item.your_solution}</p>
+                  <p className="text-emerald-300 text-sm font-medium leading-relaxed">{item.your_solution}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Score summary bar */}
-      <div className="glass-card rounded-2xl p-5 bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/20">
-        <h3 className="text-white font-semibold mb-4">Dashboard Health Score</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {categories.map(({ key, label, color, emoji }) => {
-            const items = analysis[key] ?? [];
-            const c = colorMap[color];
-            // For issues, fewer = better; for suggestions, more = better
-            const isPositive = key === 'feature_suggestions';
-            const score = isPositive
-              ? Math.min(100, items.length * 20)
-              : Math.max(0, 100 - items.length * 18);
-            return (
-              <div key={key} className="text-center">
-                <div className="text-lg mb-1">{emoji}</div>
-                <div className={`text-lg font-black ${c.header}`}>{score}%</div>
-                <div className="text-[10px] text-slate-600 leading-tight">{label}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
