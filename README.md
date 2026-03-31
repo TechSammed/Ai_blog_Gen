@@ -22,26 +22,29 @@ The system consists of 7 sequential nodes to act as an SEO decision-making engin
 - A Groq API Key
 
 ### 1. Clone the repository and navigate
-\`\`\`bash
+```
 cd blogy_backend
-\`\`\`
+```
 
 ### 2. Set up the Environment
 We recommend using conda for managing environments:
-\`\`\`bash
+
 # Create a localized conda environment
+```
 conda create --prefix ./blogy_env python=3.10 -y
+```
 
 # Activate it (on Windows/macOS)
+```
 conda activate ./blogy_env
-\`\`\`
+```
 
 *(Alternatively, you can just use `python -m venv venv` and `source venv/bin/activate` if not using conda).*
 
 ### 3. Install Requirements
-\`\`\`bash
+```
 pip install -r requirements.txt
-\`\`\`
+```
 
 ### 4. Configure Environment Variables
 Inside `blogy_backend`, create a `.env` file from the template and add your Groq API key:
@@ -62,4 +65,4 @@ The API will now be accessible at `http://127.0.0.1:8000/api/generate`.
 ### API Keys Required
 - **GROQ_API_KEY**: Required for interacting with the LangChain Mixtral language model. Without this key, the engine will safely fallback to a deterministic generation path. Store it in `.env` within the backend folder.
 
- **LANGCHAIN_API_KEY**: Required for creaing clear pipelines 
+- **LANGCHAIN_API_KEY**: Required for creaing clear pipelines 
