@@ -5,16 +5,10 @@ import os
 import textwrap
 
 from models.schemas import PlatformFormats
+from core.utils import get_llm
+from core.logger import get_logger
 
-
-def _get_llm():
-    from langchain_groq import ChatGroq
-    return ChatGroq(
-        api_key=os.environ.get("GROQ_API_KEY", ""),
-        model="llama-3.1-8b-instant",
-        temperature=0.6,
-        max_tokens=4000,
-    )
+logger = get_logger("exporter")
 
 
 def _truncate(text: str, max_chars: int = 3000) -> str:
@@ -33,7 +27,7 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
         return _make_fallback(title, content)
 
     from langchain_core.prompts import ChatPromptTemplate
-    llm = _get_llm()
+    llm = get_llm(temperature=0.6, max_tokens=4000)
 
     truncated_content = _truncate(content, 2500)
 
@@ -76,10 +70,10 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
             prompt.format_messages(title=title, content=truncated_content)
         )
         if result is not None:
-            print(f"✅ Platform formats generated (structured): {title[:40]}...")
+            logger.info("Platform formats generated (structured): %s...", title[:40])
             return result
     except Exception as err:
-        print(f"⚠️ Structured platform output failed: {err}")
+        logger.warning("Structured platform output failed: %s", err)
 
     # Strategy 2: Raw LLM + JSON parse
     try:
@@ -91,13 +85,13 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
             json_str = text[text.index("{"):text.rindex("}") + 1]
             data = json.loads(json_str)
             result = PlatformFormats(**data)
-            print(f"✅ Platform formats generated (parsed): {title[:40]}...")
+            logger.info("Platform formats generated (parsed): %s...", title[:40])
             return result
     except Exception as err:
-        print(f"⚠️ Platform JSON parse failed: {err}")
+        logger.warning("Platform JSON parse failed: %s", err)
 
     # Strategy 3: Fallback
-    print(f"🔄 Using fallback platform formats for: {title[:40]}...")
+    logger.warning("Using fallback platform formats for: %s...", title[:40])
     return _make_fallback(title, content)
 
 

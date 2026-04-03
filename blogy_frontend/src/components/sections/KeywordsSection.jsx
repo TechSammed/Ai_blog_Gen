@@ -108,7 +108,6 @@ export default function KeywordsSection() {
               <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-zinc-900/50 border border-white/5 hover:border-white/10 transition-colors">
                 <span className="text-zinc-600 text-xs font-mono font-bold w-5">0{i + 1}</span>
                 <span className="text-zinc-200 text-sm font-medium flex-1 truncate">{kword}</span>
-                {/* Clean, flat color replacing the old gradient */}
                 <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden shrink-0">
                   <div className="h-full rounded-full bg-teal-500" style={{ width: `${100 - i * 12}%` }} />
                 </div>

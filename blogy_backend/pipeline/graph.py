@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from langgraph.graph import END, StateGraph
@@ -7,7 +8,9 @@ from langgraph.graph import END, StateGraph
 from models.schemas import (
     Blog, KeywordAnalysis, Prediction, PipelineState, SerpGap,
 )
+from core.logger import get_logger
 
+logger = get_logger("pipeline")
 
 # ═══════════════════════════════════════════════════════════════
 #  FALLBACK DEFAULTS — every node has a safety net
@@ -41,18 +44,17 @@ _FALLBACK_PREDICTION = Prediction(
 
 async def keyword_node(state: PipelineState) -> dict[str, Any]:
     """Node 1 — Keyword Intelligence. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"🔑 Node 1: Keyword Intelligence [Input: {state.keyword}]")
+    logger.info("Node 1: Keyword Intelligence [Input: %s]", state.keyword)
     try:
         from core.keyword import expand_keywords
         result = await expand_keywords(state.keyword)
         if result is None:
             raise ValueError("expand_keywords returned None")
-        print(f"✅ keyword_analysis.primary_keyword = {result.primary_keyword}")
+        logger.info("keyword_analysis.primary_keyword = %s", result.primary_keyword)
         return {"keyword_analysis": result}
     except Exception as exc:
-        print(f"❌ keyword_node exception: {exc}")
-        print(f"🔄 Using fallback keyword analysis")
+        logger.error("keyword_node exception: %s", exc)
+        logger.warning("Using fallback keyword analysis")
         fallback = _FALLBACK_KEYWORD.model_copy()
         if state.keyword and state.keyword.strip():
             fallback.primary_keyword = f"AI tools for {state.keyword} blogging SEO"
@@ -61,53 +63,50 @@ async def keyword_node(state: PipelineState) -> dict[str, Any]:
 
 async def serp_node(state: PipelineState) -> dict[str, Any]:
     """Node 2 — SERP Gap Analyzer. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"🔍 Node 2: SERP Gap Analyzer")
+    logger.info("Node 2: SERP Gap Analyzer")
     kw = state.keyword_analysis.primary_keyword if state.keyword_analysis else "AI blog automation"
     try:
         from core.serp import analyze_serp
         result = await analyze_serp(kw)
         if result is None:
             raise ValueError("analyze_serp returned None")
-        print(f"✅ Found {len(result.missing_topics)} missing topics")
+        logger.info("Found %d missing topics", len(result.missing_topics))
         return {"gap": result}
     except Exception as exc:
-        print(f"❌ serp_node exception: {exc}")
-        print(f"🔄 Using fallback SERP gap")
+        logger.error("serp_node exception: %s", exc)
+        logger.warning("Using fallback SERP gap")
         return {"gap": _FALLBACK_GAP.model_copy()}
 
 
 async def predictor_node(state: PipelineState) -> dict[str, Any]:
     """Node 3 — Performance Predictor. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"📊 Node 3: Performance Predictor")
+    logger.info("Node 3: Performance Predictor")
     try:
         from core.predictor import predict_performance
         result = await predict_performance(state.keyword_analysis, state.gap)
         if result is None:
             raise ValueError("predict_performance returned None")
-        print(f"✅ SEO score predicted: {result.seo_score_predicted}")
+        logger.info("SEO score predicted: %d", result.seo_score_predicted)
         return {"prediction": result}
     except Exception as exc:
-        print(f"❌ predictor_node exception: {exc}")
-        print(f"🔄 Using fallback prediction")
+        logger.error("predictor_node exception: %s", exc)
+        logger.warning("Using fallback prediction")
         return {"prediction": _FALLBACK_PREDICTION.model_copy()}
 
 
 async def generator_node(state: PipelineState) -> dict[str, Any]:
     """Node 4 — Blog Generator. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"📝 Node 4: Blog Generator")
+    logger.info("Node 4: Blog Generator")
     try:
         from core.generator import generate_blogs
         raw_blogs = await generate_blogs(state.keyword_analysis, state.gap)
         if not raw_blogs:
             raise ValueError("generate_blogs returned empty list")
-        print(f"✅ Generated {len(raw_blogs)} blogs")
+        logger.info("Generated %d blogs", len(raw_blogs))
         return {"raw_blogs": raw_blogs}
     except Exception as exc:
-        print(f"❌ generator_node exception: {exc}")
-        print(f"🔄 Using fallback blogs")
+        logger.error("generator_node exception: %s", exc)
+        logger.warning("Using fallback blogs")
         return {"raw_blogs": [
             {"title": "AI Blog Automation Guide", "content": "# AI Blog Automation\n\nAutomate your blogging with AI."},
             {"title": "Blogy – Best AI Blog Automation Tool in India", "content": "# Blogy\n\nIndia's leading AI blog platform."},
@@ -117,15 +116,13 @@ async def generator_node(state: PipelineState) -> dict[str, Any]:
 
 async def seo_node(state: PipelineState) -> dict[str, Any]:
     """Node 5 — SEO Validator. Flattens SeoScore into Blog. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"🔍 Node 5: SEO Validator")
+    logger.info("Node 5: SEO Validator")
     kw = state.keyword_analysis.primary_keyword if state.keyword_analysis else "AI blog automation"
     blogs = []
     for i, raw in enumerate(state.raw_blogs):
         try:
             from core.seo import validate_seo
             seo = await validate_seo(raw["content"], kw)
-            # Flatten SeoScore fields directly into Blog
             blogs.append(Blog(
                 title=raw["title"],
                 content=raw["content"],
@@ -138,47 +135,44 @@ async def seo_node(state: PipelineState) -> dict[str, Any]:
                 featured_snippet=seo.featured_snippet,
                 platform_formats=None,
             ))
-            print(f"  ✅ Blog {i+1} SEO score: {seo.seo_score} | density: {seo.keyword_density}%")
+            logger.info("Blog %d SEO score: %d | density: %.2f%%", i + 1, seo.seo_score, seo.keyword_density)
         except Exception as exc:
-            print(f"  ⚠️ Blog {i+1} SEO validation failed: {exc}")
+            logger.warning("Blog %d SEO validation failed: %s", i + 1, exc)
             blogs.append(Blog(title=raw["title"], content=raw["content"]))
     return {"blogs": blogs}
 
 
 async def export_node(state: PipelineState) -> dict[str, Any]:
     """Node 6 — Platform Adaptation. Runs SEQUENTIALLY to avoid rate limits. NEVER fails."""
-    import asyncio
-    print(f"\n{'='*60}")
-    print(f"🌐 Node 6: Platform Adaptation (SEQUENTIAL)")
+    logger.info("Node 6: Platform Adaptation (SEQUENTIAL)")
 
     updated_blogs = []
     for i, blog in enumerate(state.blogs):
         if i > 0:
-            print(f"  ⏳ Waiting 1.5s before next export...")
+            logger.info("Waiting 1.5s before next export...")
             await asyncio.sleep(1.5)
         try:
             from core.exporter import format_for_platforms
             formats = await format_for_platforms(blog.title, blog.content)
-            print(f"  ✅ Blog {i+1} exported to 5 platforms")
+            logger.info("Blog %d exported to 5 platforms", i + 1)
             updated_blogs.append(blog.model_copy(update={"platform_formats": formats}))
         except Exception as exc:
-            print(f"  ⚠️ Blog {i+1} export failed: {exc}")
+            logger.warning("Blog %d export failed: %s", i + 1, exc)
             updated_blogs.append(blog)
 
     return {"blogs": updated_blogs}
 
 
 async def blogy_node(state: PipelineState) -> dict[str, Any]:
-    """Node 7 — Blogy Dashboard Analysis. NEVER fails."""
-    print(f"\n{'='*60}")
-    print(f"📈 Node 7: Blogy Dashboard Analysis")
+    """Node 7 — Blogy Dashboard Analysis. Now dynamic! NEVER fails."""
+    logger.info("Node 7: Blogy Dashboard Analysis")
     try:
         from core.blogy_analysis import analyze_blogy
-        result = await analyze_blogy()
-        print(f"✅ Blogy analysis complete")
+        result = await analyze_blogy(blogs=state.blogs, keyword=state.keyword)
+        logger.info("Blogy analysis complete")
         return {"blogy_analysis": result}
     except Exception as exc:
-        print(f"❌ blogy_node exception: {exc}")
+        logger.error("blogy_node exception: %s", exc)
         from models.schemas import BlogyAnalysis, ImprovementsMapping
         return {"blogy_analysis": BlogyAnalysis(
             ux_issues=["Dashboard needs improvement"],
@@ -193,6 +187,21 @@ async def blogy_node(state: PipelineState) -> dict[str, Any]:
                 your_solution="Real-time SEO Validator Node",
             )],
         )}
+
+
+# ═══════════════════════════════════════════════════════════════
+#  NODE-TO-STEP MAPPING (for streaming progress)
+# ═══════════════════════════════════════════════════════════════
+
+NODE_STEP_MAP = {
+    "keyword_node": 1,
+    "serp_node": 2,
+    "predictor_node": 3,
+    "generator_node": 4,
+    "seo_node": 5,
+    "export_node": 6,
+    "blogy_node": 7,
+}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -227,12 +236,31 @@ _compiled_graph = _build_graph().compile()
 
 async def run_pipeline(keyword: str) -> PipelineState:
     """Execute the full pipeline. NEVER crashes."""
-    print(f"\n{'#'*60}")
-    print(f"# PIPELINE START: '{keyword}'")
-    print(f"{'#'*60}")
+    logger.info("PIPELINE START: '%s'", keyword)
     initial_state = PipelineState(keyword=keyword)
     result = await _compiled_graph.ainvoke(initial_state)
-    print(f"\n{'#'*60}")
-    print(f"# PIPELINE COMPLETE")
-    print(f"{'#'*60}\n")
+    logger.info("PIPELINE COMPLETE")
     return result
+
+
+async def run_pipeline_stream(keyword: str):
+    """Execute the pipeline, yielding real-time progress after each node.
+
+    Yields dicts:
+      {"type": "progress", "step": 1-7, "node": "keyword_node"}
+      {"type": "complete", "state": {accumulated state dict}}
+    """
+    logger.info("PIPELINE STREAM START: '%s'", keyword)
+    initial_state = PipelineState(keyword=keyword)
+    accumulated = {}
+
+    async for event in _compiled_graph.astream(initial_state, stream_mode="updates"):
+        for node_name, updates in event.items():
+            step = NODE_STEP_MAP.get(node_name)
+            if step:
+                accumulated.update(updates)
+                logger.info("Stream: Node %d (%s) completed", step, node_name)
+                yield {"type": "progress", "step": step, "node": node_name}
+
+    yield {"type": "complete", "state": accumulated}
+    logger.info("PIPELINE STREAM COMPLETE")

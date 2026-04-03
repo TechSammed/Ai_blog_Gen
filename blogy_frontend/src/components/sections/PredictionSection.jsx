@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
+import ScoreRing from '../ui/ScoreRing';
 import {
   BarChart2, Users, Gauge, AlertTriangle,
   Target, Rocket, Swords, Clock
@@ -12,7 +13,7 @@ export default function PredictionSection() {
 
   if (!p) return <EmptyState icon="📈" text="Generate a blog first to see performance predictions" />;
 
-  const difficultyColor = { Low: 'emerald', Medium: 'yellow', High: 'red' }[p.ranking_difficulty] || 'yellow';
+  const difficultyColor = { Easy: 'emerald', Medium: 'yellow', Hard: 'red', Low: 'emerald', High: 'red' }[p.ranking_difficulty] || 'yellow';
   const trafficColor = { Low: 'red', Medium: 'yellow', High: 'emerald', 'Very High': 'violet' }[p.traffic_potential] || 'blue';
 
   return (
@@ -23,7 +24,7 @@ export default function PredictionSection() {
 
         {/* Custom, Flat SEO Score Ring */}
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm group hover:border-white/10 transition-colors sm:col-span-2 lg:col-span-1">
-          <CleanScoreRing value={p.seo_score_predicted} max={100} label="Predicted SEO" />
+          <ScoreRing value={p.seo_score_predicted} max={100} label="Predicted SEO" size="lg" />
         </div>
 
         <StatCard
@@ -116,59 +117,6 @@ export default function PredictionSection() {
             title="Time to Results"
             body={`Based on these metrics, expect measurable organic traffic growth within ${p.ranking_difficulty === 'Low' ? '30–60' : p.ranking_difficulty === 'Medium' ? '60–90' : '90–120'} days.`}
           />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Inline Clean Score Ring (Replaces the glowing external component)
-function CleanScoreRing({ value, max = 100, label }) {
-  const radius = 46;
-  const stroke = 8;
-  const normalizedRadius = radius - stroke / 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (value / max) * circumference;
-
-  // Solid, flat colors based on score
-  const ringColor = value >= 80 ? 'text-emerald-500' : value >= 60 ? 'text-amber-500' : 'text-rose-500';
-
-  return (
-    <div className="flex flex-col h-full w-full">
-      <div className="flex items-center gap-2 mb-4">
-        <Target size={18} className="text-zinc-500" />
-        <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">{label}</span>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center relative">
-        <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
-          {/* Background track */}
-          <circle
-            stroke="currentColor"
-            fill="transparent"
-            strokeWidth={stroke}
-            r={normalizedRadius}
-            cx={radius}
-            cy={radius}
-            className="text-zinc-800"
-          />
-          {/* Foreground progress indicator */}
-          <circle
-            stroke="currentColor"
-            fill="transparent"
-            strokeWidth={stroke}
-            strokeDasharray={circumference + ' ' + circumference}
-            style={{ strokeDashoffset }}
-            strokeLinecap="round"
-            r={normalizedRadius}
-            cx={radius}
-            cy={radius}
-            className={`${ringColor} transition-all duration-1000 ease-out`}
-          />
-        </svg>
-        {/* Inner text score */}
-        <div className="absolute flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold tracking-tight text-zinc-100">{value}</span>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
 import BlogModal from '../ui/BlogModal';
+import ScoreRing from '../ui/ScoreRing';
 import {
   Eye, Copy, CheckSquare, PenLine, Award
 } from 'lucide-react';
@@ -63,7 +64,7 @@ export default function BlogsSection() {
       {/* ─── Blog Cards ─── */}
       <div className="space-y-5">
         {blogs.map((blog, idx) => {
-          const seo = blog.seo_score;
+          const hasSeo = blog.seo_score > 0;
           const hasPlatforms = blog.platform_formats && Object.keys(blog.platform_formats).length > 0;
           const activePlatform = selectedPlatform[blog.title];
           const contentToCopy = getBlogContent(blog);
@@ -83,21 +84,21 @@ export default function BlogsSection() {
                     </div>
                     <h3 className="text-zinc-100 font-bold text-lg leading-snug">{blog.title}</h3>
                   </div>
-                  {seo && (
+                  {hasSeo && (
                     <div className="shrink-0">
-                      <CleanScoreRing value={seo.seo_score} max={100} />
+                      <ScoreRing value={blog.seo_score} max={100} />
                     </div>
                   )}
                 </div>
 
                 {/* SEO Metrics Row */}
-                {seo && (
+                {hasSeo && (
                   <div className="flex flex-wrap gap-2.5 mb-6">
-                    <SEOBadge label="Readability" value={`${seo.readability_score}`} good={seo.readability_score >= 60} />
-                    <SEOBadge label="AI Detection" value={`${seo.ai_detection_score}%`} good={seo.ai_detection_score <= 20} />
-                    <SEOBadge label="Humanization" value={`${seo.humanization_score}%`} good={seo.humanization_score >= 70} />
-                    <SEOBadge label="KW Density" value={`${seo.keyword_density?.toFixed(1)}%`} good={seo.keyword_density <= 2} />
-                    {seo.snippet_readiness && (
+                    <SEOBadge label="Readability" value={`${blog.readability_score}`} good={blog.readability_score >= 60} />
+                    <SEOBadge label="AI Detection" value={`${blog.ai_detection_score}%`} good={blog.ai_detection_score <= 20} />
+                    <SEOBadge label="Humanization" value={`${blog.humanization_score}%`} good={blog.humanization_score >= 70} />
+                    <SEOBadge label="KW Density" value={`${blog.keyword_density?.toFixed(1)}%`} good={blog.keyword_density <= 2} />
+                    {blog.snippet_readiness && (
                       <SEOBadge label="Featured Snippet" value="Ready" good={true} />
                     )}
                   </div>
@@ -162,13 +163,13 @@ export default function BlogsSection() {
               </div>
 
               {/* Featured Snippet Indicator */}
-              {seo?.featured_snippet && (
+              {blog.featured_snippet && (
                 <div className="px-6 pb-6 pt-2">
                   <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-4 flex items-start gap-3">
                     <Award size={18} className="text-indigo-400 shrink-0 mt-0.5" />
                     <div>
                       <div className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-1.5">Featured Snippet Target</div>
-                      <p className="text-zinc-400 text-sm leading-relaxed">{seo.featured_snippet.slice(0, 150)}…</p>
+                      <p className="text-zinc-400 text-sm leading-relaxed">{blog.featured_snippet.slice(0, 150)}…</p>
                     </div>
                   </div>
                 </div>
@@ -178,39 +179,13 @@ export default function BlogsSection() {
         })}
       </div>
 
-      {/* ─── Properly Stacked & Centered Modal Wrapper ─── */}
+      {/* ─── Blog Modal ─── */}
       {selectedBlog && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-          {/* Complete screen backdrop blur */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedBlog(null)} />
-
-          {/* Centered Modal Card with constrained height */}
-          <div className="relative w-full max-w-4xl max-h-[85vh] z-10 bg-[#0a0a0c] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/5 bg-zinc-900/50 flex justify-between items-center shrink-0">
-              <h3 className="text-zinc-100 font-semibold">
-                {selectedBlog.platform ? PLATFORM_CONFIG[selectedBlog.platform]?.label + ' Format' : 'Original Format'}
-              </h3>
-              <button
-                onClick={() => setSelectedBlog(null)}
-                className="p-1 text-zinc-500 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Content Area */}
-            <div className="overflow-y-auto w-full h-full p-6">
-              <BlogModal
-                blog={selectedBlog.blog}
-                platform={selectedBlog.platform}
-                onClose={() => setSelectedBlog(null)}
-              />
-            </div>
-
-          </div>
-        </div>
+        <BlogModal
+          blog={selectedBlog.blog}
+          platform={selectedBlog.platform}
+          onClose={() => setSelectedBlog(null)}
+        />
       )}
     </div>
   );
@@ -227,46 +202,4 @@ function SEOBadge({ label, value, good }) {
     </div>
   );
 }
-
-// Fixed Alignment Score Ring
-function CleanScoreRing({ value, max = 100 }) {
-  const radius = 24;
-  const stroke = 4;
-  const normalizedRadius = radius - stroke / 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (value / max) * circumference;
-
-  const ringColor = value >= 80 ? 'text-emerald-500' : value >= 60 ? 'text-amber-500' : 'text-rose-500';
-
-  return (
-    <div className="relative flex items-center justify-center w-12 h-12">
-      <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 absolute inset-0">
-        <circle
-          stroke="currentColor"
-          fill="transparent"
-          strokeWidth={stroke}
-          r={normalizedRadius}
-          cx={radius}
-          cy={radius}
-          className="text-zinc-800"
-        />
-        <circle
-          stroke="currentColor"
-          fill="transparent"
-          strokeWidth={stroke}
-          strokeDasharray={circumference + ' ' + circumference}
-          style={{ strokeDashoffset }}
-          strokeLinecap="round"
-          r={normalizedRadius}
-          cx={radius}
-          cy={radius}
-          className={`${ringColor} transition-all duration-1000 ease-out`}
-        />
-      </svg>
-      {/* Absolute inset-0 guarantees the text centers inside the ring perfectly */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-zinc-100">{value}</span>
-      </div>
-    </div>
-  );
-}
+

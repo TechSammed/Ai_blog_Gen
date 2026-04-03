@@ -1,79 +1,56 @@
-export default function ScoreRing({ value, max = 100, label, size = 120, small = false }) {
-  const radius = size * 0.38;
-  const circumference = 2 * Math.PI * radius;
-  const pct = Math.min(100, Math.max(0, (value / max) * 100));
-  const offset = circumference - (pct / 100) * circumference;
+export default function ScoreRing({ value, max = 100, label, size = 'sm' }) {
+  const isLarge = size === 'lg';
+  const radius = isLarge ? 46 : 24;
+  const stroke = isLarge ? 8 : 4;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (value / max) * circumference;
 
-  const getColor = (pct) => {
-    if (pct >= 75) return { stroke: '#34d399', text: 'text-emerald-400', glow: 'rgba(52, 211, 153, 0.4)' };
-    if (pct >= 55) return { stroke: '#fbbf24', text: 'text-amber-400', glow: 'rgba(251, 191, 36, 0.4)' };
-    return { stroke: '#f87171', text: 'text-red-400', glow: 'rgba(248, 113, 113, 0.4)' };
-  };
+  const ringColor =
+    value >= 80 ? 'text-emerald-500' :
+      value >= 60 ? 'text-amber-500' : 'text-rose-500';
 
-  const { stroke, text } = getColor(pct);
-
-  if (small) {
+  if (isLarge) {
     return (
-      <div className="flex flex-col items-center" title={label || 'SEO Score'}>
-        <div className="score-ring" style={{ width: size, height: size }}>
-          <svg width={size} height={size}>
-            <circle
-              className="score-ring-bg"
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              strokeWidth={size * 0.08}
-            />
-            <circle
-              className="score-ring-fill"
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              strokeWidth={size * 0.08}
-              stroke={stroke}
-              strokeDasharray={circumference}
-              strokeDashoffset={offset}
-              style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', filter: `drop-shadow(0 0 4px ${stroke})` }}
-            />
+      <div className="flex flex-col h-full w-full">
+        {label && (
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-zinc-400 text-xs font-semibold uppercase tracking-wider">{label}</span>
+          </div>
+        )}
+        <div className="flex-1 flex items-center justify-center relative">
+          <svg height={radius * 2} width={radius * 2} className="transform -rotate-90">
+            <circle stroke="currentColor" fill="transparent" strokeWidth={stroke}
+              r={normalizedRadius} cx={radius} cy={radius} className="text-zinc-800" />
+            <circle stroke="currentColor" fill="transparent" strokeWidth={stroke}
+              strokeDasharray={`${circumference} ${circumference}`}
+              style={{ strokeDashoffset }} strokeLinecap="round"
+              r={normalizedRadius} cx={radius} cy={radius}
+              className={`${ringColor} transition-all duration-1000 ease-out`} />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`font-black leading-none ${text}`} style={{ fontSize: size * 0.22 }}>{value}</span>
-            <span className="text-slate-600" style={{ fontSize: size * 0.12 }}>SEO</span>
+          <div className="absolute flex flex-col items-center justify-center">
+            <span className="text-3xl font-bold tracking-tight text-zinc-100">{value}</span>
           </div>
         </div>
       </div>
     );
   }
 
+  /* ─── Small variant (BlogsSection) ─── */
   return (
-    <div className="flex flex-col items-center">
-      <div className="score-ring" style={{ width: size, height: size }}>
-        <svg width={size} height={size}>
-          <circle
-            className="score-ring-bg"
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            strokeWidth={size * 0.07}
-          />
-          <circle
-            className="score-ring-fill"
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            strokeWidth={size * 0.07}
-            stroke={stroke}
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%', filter: `drop-shadow(0 0 8px ${stroke})` }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`font-black leading-none ${text}`} style={{ fontSize: size * 0.26 }}>{value}</span>
-          <span className="text-slate-500 text-xs mt-0.5">/100</span>
-        </div>
+    <div className="relative flex items-center justify-center w-12 h-12">
+      <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 absolute inset-0">
+        <circle stroke="currentColor" fill="transparent" strokeWidth={stroke}
+          r={normalizedRadius} cx={radius} cy={radius} className="text-zinc-800" />
+        <circle stroke="currentColor" fill="transparent" strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          style={{ strokeDashoffset }} strokeLinecap="round"
+          r={normalizedRadius} cx={radius} cy={radius}
+          className={`${ringColor} transition-all duration-1000 ease-out`} />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-xs font-bold text-zinc-100">{value}</span>
       </div>
-      {label && <p className="text-slate-400 text-xs text-center mt-2">{label}</p>}
     </div>
   );
 }

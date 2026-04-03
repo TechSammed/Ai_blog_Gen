@@ -82,8 +82,6 @@ export default function SerpSection() {
           </div>
         </div>
       </div>
-
-      {/* ─── Opportunity Banner (SVG Icon, No Emoji) ─── */}
       <div className="bg-[#0a0a0c] border border-indigo-500/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
         {/* Subtle accent line */}
         <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/40" />

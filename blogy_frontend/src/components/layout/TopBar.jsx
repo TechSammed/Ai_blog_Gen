@@ -1,27 +1,31 @@
 import { useApp, SECTIONS } from '../../hooks/useAppContext';
-import { Clock } from 'lucide-react';
+import { Clock, Menu } from 'lucide-react';
 
 const PIPELINE_STEPS_SHORT = ['Keywords', 'SERP', 'Predict', 'Generate', 'SEO', 'Export', 'Analysis'];
 
 export default function TopBar() {
-  const { activeSection, isLoading, pipelineStep, elapsedTime, sidebarOpen } = useApp();
+  const { activeSection, isLoading, pipelineStep, elapsedTime, sidebarOpen, setSidebarOpen } = useApp();
 
   const currentSection = SECTIONS.find(s => s.id === activeSection);
 
   const formatTime = (s) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 
   return (
-    <header className="fixed top-0 right-0 z-30 h-16 flex items-center
-      bg-[#0d0d16]/95 backdrop-blur-md border-b border-white/[0.08]
-      transition-all duration-300"
-      style={{ left: sidebarOpen ? '256px' : '64px' }}
+    <header className={`fixed top-0 right-0 z-30 h-16 flex items-center bg-[#0d0d16]/95 backdrop-blur-md border-b border-white/[0.08] transition-all duration-300 left-0 md:left-16 ${sidebarOpen ? 'md:left-64' : ''}`}
     >
-      <div className="flex items-center justify-between w-full px-6 gap-4">
-        {/* Left: Breadcrumb */}
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between w-full px-4 md:px-6 gap-4">
+        {/* Left: Breadcrumb & Mobile Toggle */}
+        <div className="flex items-center gap-2 md:gap-4">
+          <button 
+            className="md:hidden p-1.5 -ml-1 text-slate-400 hover:text-white transition-colors"
+            onClick={() => setSidebarOpen(true)}
+            title="Open Menu"
+          >
+            <Menu size={20} />
+          </button>
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-sm">Blogy</span>
-            <span className="text-slate-700">/</span>
+            <span className="text-slate-500 text-sm hidden sm:inline">Blogy</span>
+            <span className="text-slate-700 hidden sm:inline">/</span>
             <span className="text-slate-200 text-sm font-medium">{currentSection?.label}</span>
           </div>
         </div>

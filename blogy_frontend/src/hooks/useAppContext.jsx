@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { generateBlog } from '../api/blogApi';
+import { generateBlogStream, generateBlog } from '../api/blogApi';
 
 const AppContext = createContext(null);
 
@@ -41,39 +41,51 @@ export function AppProvider({ children }) {
     setPipelineStep(0);
     setElapsedTime(0);
 
-    // Start a timer that simulates pipeline progress
+    // Elapsed time counter
     const startTime = Date.now();
     const timer = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
 
-    // Simulate progressive pipeline steps
-    const stepDurations = [4000, 4000, 4000, 25000, 15000, 10000, 6000];
-    let stepTimer;
-    let currentStep = 0;
-
-    const advanceStep = () => {
-      if (currentStep < 7) {
-        currentStep++;
-        setPipelineStep(currentStep);
-        if (currentStep < 7) {
-          stepTimer = setTimeout(advanceStep, stepDurations[currentStep] || 6000);
-        }
-      }
-    };
-    stepTimer = setTimeout(advanceStep, stepDurations[0]);
-
     try {
-      const data = await generateBlog(kw);
-      clearTimeout(stepTimer);
+      // ── Strategy 1: Real-time streaming (preferred) ──
+      const data = await generateBlogStream(kw, (step) => {
+        setPipelineStep(step);
+      });
       clearInterval(timer);
       setPipelineStep(7);
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
       setResult(data);
-    } catch (err) {
-      clearTimeout(stepTimer);
-      clearInterval(timer);
-      setError(err.message || 'Something went wrong. Make sure the backend is running on port 8000.');
+    } catch (streamErr) {
+      console.warn('Streaming failed, falling back to non-streaming:', streamErr.message);
+
+      // ── Strategy 2: Non-streaming fallback ──
+      try {
+        // Simulate progress since we can't get real events from non-streaming
+        const stepDurations = [4000, 4000, 4000, 25000, 15000, 10000, 6000];
+        let currentStep = 0;
+        let stepTimer;
+        const advanceStep = () => {
+          if (currentStep < 7) {
+            currentStep++;
+            setPipelineStep(currentStep);
+            if (currentStep < 7) {
+              stepTimer = setTimeout(advanceStep, stepDurations[currentStep] || 6000);
+            }
+          }
+        };
+        stepTimer = setTimeout(advanceStep, stepDurations[0]);
+
+        const data = await generateBlog(kw);
+        clearTimeout(stepTimer);
+        clearInterval(timer);
+        setPipelineStep(7);
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+        setResult(data);
+      } catch (fallbackErr) {
+        clearInterval(timer);
+        setError(fallbackErr.message || 'Something went wrong. Make sure the backend is running on port 8000.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -23,24 +23,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      {/* Ambient background orbs */}
       <div className="bg-orb bg-orb-1" />
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
-
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Top Bar */}
       <TopBar />
-
-      {/* Main content */}
       <main
-        className="min-h-screen transition-all duration-300 relative z-10"
-        style={{
-          paddingLeft: sidebarOpen ? '256px' : '64px',
-          paddingTop: '64px',
-        }}
+        className={`min-h-screen transition-all duration-300 relative z-10 pt-16 pl-0 md:pl-16 ${sidebarOpen ? 'md:pl-64' : ''}`}
       >
         <div className="max-w-6xl mx-auto px-6 py-8">
           <ActiveComponent key={activeSection} />

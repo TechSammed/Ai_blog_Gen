@@ -1,123 +1,20 @@
 from __future__ import annotations
 
 import asyncio
-import os
 import re
 import textwrap
 from typing import Any
 
 from models.schemas import KeywordAnalysis, SerpGap
+from core.utils import (
+    get_llm, safe_llm_call, keyword_density,
+    flesch_reading_ease, ai_detection_score,
+)
+from core.logger import get_logger
+
+logger = get_logger("generator")
 
 
-def _get_llm():
-    from langchain_groq import ChatGroq
-    return ChatGroq(
-        api_key=os.environ.get("GROQ_API_KEY", ""),
-        model="llama-3.1-8b-instant",
-        temperature=0.5,
-        max_tokens=4000,
-    )
-
-
-# ═══════════════════════════════════════════════════════════════
-#  SAFE LLM CALL — retry handler with exponential backoff
-# ═══════════════════════════════════════════════════════════════
-
-async def safe_llm_call(func, *args, max_retries: int = 3):
-    """Call an async LLM function with automatic retry on rate limits."""
-    for attempt in range(max_retries):
-        try:
-            return await func(*args)
-        except Exception as e:
-            error_str = str(e).lower()
-            if "rate_limit" in error_str or "429" in error_str or "too many" in error_str:
-                wait_time = 2 * (attempt + 1)
-                print(f"  ⏳ Rate limit hit, waiting {wait_time}s (attempt {attempt + 1}/{max_retries})...")
-                await asyncio.sleep(wait_time)
-            else:
-                raise e
-    # Final attempt — let it raise naturally
-    return await func(*args)
-
-
-# ═══════════════════════════════════════════════════════════════
-#  KEYWORD DENSITY — robust regex-based calculation
-# ═══════════════════════════════════════════════════════════════
-
-def keyword_density(text: str, keyword: str) -> float:
-    """Compute keyword density as a percentage using robust regex matching."""
-    content = text.lower()
-    kw = keyword.lower().strip()
-    if not kw:
-        return 0.0
-
-    matches = len(re.findall(re.escape(kw), content))
-    words = len(content.split())
-
-    if words == 0:
-        return 0.0
-
-    kw_word_count = len(kw.split())
-    return round((matches * kw_word_count / words) * 100, 2)
-
-
-def readability_score(text: str) -> float:
-    """Compute Flesch Reading Ease score. Higher = easier to read. Target: 60+."""
-    words = text.split()
-    word_count = len(words)
-    sentence_count = max(1, len(re.split(r"[.!?]+", text)))
-
-    syllable_count = 0
-    for word in words:
-        word_clean = word.lower().strip(".,!?;:\"'()-")
-        if len(word_clean) <= 3:
-            syllable_count += 1
-            continue
-        vowels = "aeiou"
-        count = 0
-        prev_vowel = False
-        for ch in word_clean:
-            is_vowel = ch in vowels
-            if is_vowel and not prev_vowel:
-                count += 1
-            prev_vowel = is_vowel
-        if word_clean.endswith("e") and count > 1:
-            count -= 1
-        syllable_count += max(1, count)
-
-    if word_count == 0 or sentence_count == 0:
-        return 50.0
-
-    return 206.835 - 1.015 * (word_count / sentence_count) - 84.6 * (syllable_count / word_count)
-
-
-def ai_detection_score(text: str) -> int:
-    """Score how AI-like the text sounds. Lower = more human. Target: ≤20."""
-    ai_indicators = [
-        "it's worth noting", "importantly", "furthermore", "additionally",
-        "in summary", "to summarize", "overall", "in essence",
-        "as we can see", "as mentioned", "as discussed", "moving forward",
-        "it should be noted", "on the other hand", "having said that",
-        "with that being said", "that being said", "all in all",
-        "to conclude", "in a nutshell", "at its core",
-    ]
-    banned = [
-        "the future looks bright", "in today's world", "rapidly evolving",
-        "revolutionizing", "game-changer", "game changer", "dive deep",
-        "harness the power", "it's important to note", "it is important to note",
-        "in the ever-evolving", "cutting-edge", "groundbreaking",
-        "leverage the power", "paradigm shift", "synergy",
-    ]
-    text_lower = text.lower()
-    hits = sum(1 for phrase in ai_indicators if phrase in text_lower)
-    banned_hits = sum(1 for phrase in banned if phrase in text_lower)
-
-    return min(95, 10 + hits * 5 + banned_hits * 8)
-
-
-# ═══════════════════════════════════════════════════════════════
-#  LOCAL CLEANUP — instant, no LLM calls
-# ═══════════════════════════════════════════════════════════════
 
 BANNED_PHRASES = [
     "the future looks bright", "in today's world", "has shown promise",
@@ -145,7 +42,7 @@ def _kill_banned_phrases(content: str) -> str:
     result = re.sub(r"  +", " ", result)
     result = re.sub(r"\n\n\n+", "\n\n", result)
     if killed:
-        print(f"  🔪 Killed {len(killed)} banned phrases: {killed[:5]}")
+        logger.info("Killed %d banned phrases: %s", len(killed), killed[:5])
     return result
 
 
@@ -191,18 +88,14 @@ def _split_long_sentences(content: str) -> str:
         fixed_lines.append(" ".join(new_sentences))
 
     if splits_made:
-        print(f"  ✂️ Split {splits_made} long sentences (>20 words)")
+        logger.info("Split %d long sentences (>20 words)", splits_made)
     return "\n".join(fixed_lines)
 
-
-# ═══════════════════════════════════════════════════════════════
-#  POST-GENERATION CLEAN — always runs after generation
-# ═══════════════════════════════════════════════════════════════
 
 async def _clean_for_density(blog: str, keyword: str) -> str:
     """LLM rewrite to fix keyword density. ALWAYS runs after generation."""
     async def _do_clean():
-        llm = _get_llm()
+        llm = get_llm(temperature=0.5, max_tokens=4000)
         prompt = (
             f"Rewrite the blog to:\n"
             f"- Reduce keyword repetition\n"
@@ -219,46 +112,37 @@ async def _clean_for_density(blog: str, keyword: str) -> str:
 
 
 async def _quality_pipeline(blog_content: str, keyword: str) -> str:
-    """Post-generation pipeline: local cleanup → LLM clean → local density calc.
-
-    Pipeline order: generate → local fix → clean → THEN calculate density
-    """
+    """Post-generation pipeline: local cleanup → LLM clean → final metrics."""
     content = blog_content
-    print(f"\n  🔧 QUALITY PIPELINE START")
+    logger.info("QUALITY PIPELINE START")
 
-    # --- STEP 1: Local fixes (instant) ---
+    #STEP 1: Local fixes 
     content = _kill_banned_phrases(content)
     content = _split_long_sentences(content)
 
-    # --- STEP 2: LLM clean for density (ALWAYS runs) ---
+    #STEP 2: LLM clean for density (ALWAYS runs)
     density_before = keyword_density(content, keyword)
-    print(f"  📊 Density BEFORE clean: {density_before}%")
+    logger.info("Density BEFORE clean: %.2f%%", density_before)
 
     try:
         content = await _clean_for_density(content, keyword)
-        # Re-run local fixes after LLM rewrite
         content = _kill_banned_phrases(content)
     except Exception as exc:
-        print(f"  ❌ Clean step failed: {exc}, keeping original")
+        logger.error("Clean step failed: %s, keeping original", exc)
 
-    # --- STEP 3: Calculate density AFTER cleaning ---
+    #STEP 3: Calculate density AFTER cleaning 
     final_density = keyword_density(content, keyword)
-    final_read = readability_score(content)
+    final_read = flesch_reading_ease(content)
     final_ai = ai_detection_score(content)
     final_words = len(content.split())
-    print(f"\n  📋 FINAL METRICS:")
-    print(f"     Keyword density: {final_density}%")
-    print(f"     Readability: {final_read:.0f}")
-    print(f"     AI score: {final_ai}")
-    print(f"     Word count: {final_words}")
-    print(f"  🔧 QUALITY PIPELINE COMPLETE\n")
+    logger.info(
+        "FINAL METRICS: density=%.2f%% | readability=%.0f | AI=%d | words=%d",
+        final_density, final_read, final_ai, final_words,
+    )
 
     return content
 
 
-# ═══════════════════════════════════════════════════════════════
-#  SAFE ACCESSORS
-# ═══════════════════════════════════════════════════════════════
 
 def _safe_kw(keyword_analysis) -> str:
     if isinstance(keyword_analysis, dict):
@@ -274,10 +158,6 @@ def _safe_list(obj, field: str) -> list[str]:
         return getattr(obj, field, [])
     return []
 
-
-# ═══════════════════════════════════════════════════════════════
-#  FALLBACK BLOGS
-# ═══════════════════════════════════════════════════════════════
 
 _FALLBACK_GENERAL = {
     "title": "AI Blog Automation: The Complete Guide to Scaling Content",
@@ -299,7 +179,7 @@ _FALLBACK_GENERAL = {
         ## How AI Blog Automation Compares to Manual Writing
 
         | Factor | Manual | Automated |
-        |--------|--------|-----------|
+        |--------|--------|-----------| 
         | Time per post | 4-6 hours | 15-30 minutes |
         | SEO consistency | Varies | Built-in |
         | Cost at scale | Linear increase | Flat |
@@ -422,10 +302,6 @@ _FALLBACK_BLOGY_2 = {
 }
 
 
-# ═══════════════════════════════════════════════════════════════
-#  GENERATION FUNCTIONS
-# ═══════════════════════════════════════════════════════════════
-
 async def _generate_general_blog(
     keyword_analysis: KeywordAnalysis | dict[str, Any] | None,
     gap: SerpGap | dict[str, Any] | None,
@@ -481,7 +357,7 @@ async def _generate_general_blog(
         ])
 
         async def _do_generate():
-            llm = _get_llm()
+            llm = get_llm(temperature=0.5, max_tokens=4000)
             return await llm.ainvoke(
                 prompt.format_messages(
                     keyword=kw,
@@ -495,21 +371,19 @@ async def _generate_general_blog(
         result_msg = await safe_llm_call(_do_generate)
         content = result_msg.content
 
-        # Extract title from H1
         title = kw.title()
         for line in content.split("\n"):
             if line.startswith("# "):
                 title = line.replace("# ", "").strip()
                 break
 
-        # Pipeline: generate → clean → THEN calculate density
-        print(f"✅ General blog generated: {title} ({len(content.split())} words)")
+        logger.info("General blog generated: %s (%d words)", title, len(content.split()))
         content = await _quality_pipeline(content, kw)
 
         return {"title": title, "content": content}
 
     except Exception as exc:
-        print(f"❌ General blog generation FAILED: {exc}")
+        logger.error("General blog generation FAILED: %s", exc)
         return _FALLBACK_GENERAL.copy()
 
 
@@ -545,18 +419,18 @@ async def _generate_blogy_blog(title: str, specific_prompt: str) -> dict[str, st
         ])
 
         async def _do_generate():
-            llm = _get_llm()
+            llm = get_llm(temperature=0.5, max_tokens=4000)
             return await llm.ainvoke(prompt.format_messages())
 
         msg = await safe_llm_call(_do_generate)
 
-        print(f"✅ Blogy blog raw: {len(msg.content.split())} words")
+        logger.info("Blogy blog raw: %d words", len(msg.content.split()))
         content = await _quality_pipeline(msg.content, "Blogy")
 
         return {"title": title, "content": content}
 
     except Exception as exc:
-        print(f"❌ Blogy blog generation FAILED ({title[:40]}): {exc}")
+        logger.error("Blogy blog generation FAILED (%s): %s", title[:40], exc)
         return None
 
 
@@ -594,7 +468,7 @@ async def _generate_blogy_blogs() -> list[dict[str, str]]:
     results = []
     for i, config in enumerate(blog_configs):
         if i > 0:
-            print(f"  ⏳ Waiting 1.5s before next blog...")
+            logger.info("Waiting 1.5s before next blog...")
             await asyncio.sleep(1.5)
 
         blog = await _generate_blogy_blog(config["title"], config["prompt"])
@@ -612,16 +486,16 @@ async def generate_blogs(
     """Generate 1 general + 2 Blogy blogs SEQUENTIALLY. No parallel = no rate limits."""
 
     kw = _safe_kw(keyword_analysis)
-    print(f"📝 Generating blogs SEQUENTIALLY | keyword={kw}")
+    logger.info("Generating blogs SEQUENTIALLY | keyword=%s", kw)
 
     # Blog 1: General blog
     general_blog = await _generate_general_blog(keyword_analysis, gap)
 
     # Wait before next batch
-    print(f"  ⏳ Waiting 1.5s before Blogy blogs...")
+    logger.info("Waiting 1.5s before Blogy blogs...")
     await asyncio.sleep(1.5)
 
-    # Blog 2 & 3: Blogy blogs (sequential internally)
+    # Blog 2 & 3: Blogy blogs
     blogy_blogs = await _generate_blogy_blogs()
 
     if len(blogy_blogs) < 2:
@@ -629,5 +503,5 @@ async def generate_blogs(
             blogy_blogs.append(_FALLBACK_BLOGY_2.copy())
 
     result = [general_blog] + blogy_blogs
-    print(f"✅ Total blogs generated: {len(result)}")
+    logger.info("Total blogs generated: %d", len(result))
     return result

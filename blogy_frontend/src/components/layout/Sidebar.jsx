@@ -29,11 +29,18 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
-      className={`fixed top-0 left-0 h-screen z-40 flex flex-col transition-all duration-300 ease-in-out
-        ${sidebarOpen ? 'w-64' : 'w-16'}
-        bg-[#0d0d16] border-r border-white/[0.08]`}
-    >
+    <>
+      {/* Mobile Overlay */}
+      <div 
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-30 transition-opacity duration-300 md:hidden ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setSidebarOpen(false)} 
+      />
+
+      <aside
+        className={`fixed top-0 left-0 h-screen z-40 flex flex-col transition-all duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-16'}
+          bg-[#0d0d16] border-r border-white/[0.08]`}
+      >
       {/* Logo & Toggle Header */}
       <div className={`flex items-center h-16 border-b border-white/[0.08] shrink-0 ${sidebarOpen ? 'px-5 justify-between' : 'justify-center'}`}>
 
@@ -72,7 +79,10 @@ export default function Sidebar() {
           return (
             <button
               key={section.id}
-              onClick={() => setActiveSection(section.id)}
+              onClick={() => {
+                setActiveSection(section.id);
+                if (window.innerWidth < 768) setSidebarOpen(false);
+              }}
               title={!sidebarOpen ? section.label : ''}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150 group
                 ${isActive
@@ -106,5 +116,6 @@ export default function Sidebar() {
         })}
       </nav>
     </aside>
+    </>
   );
 }

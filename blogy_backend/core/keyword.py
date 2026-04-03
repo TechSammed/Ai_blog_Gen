@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
+
 from models.schemas import KeywordAnalysis
+from core.utils import get_llm
+from core.logger import get_logger
 
+logger = get_logger("keyword")
 
-# ---------- FALLBACK (NEVER RETURN None) ----------
 _FALLBACK_KEYWORD = KeywordAnalysis(
     primary_keyword="AI blog automation",
     secondary_keywords=[
@@ -36,13 +38,7 @@ async def expand_keywords(keyword: str) -> KeywordAnalysis:
     NEVER returns None — falls back to defaults on any error.
     """
     try:
-        from langchain_groq import ChatGroq
-
-        llm = ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY", ""),
-            model="llama-3.1-8b-instant",
-            temperature=0.3,
-        )
+        llm = get_llm(temperature=0.3)
 
         prompt = (
             f"You are an elite SEO strategist.\n"
@@ -60,35 +56,35 @@ async def expand_keywords(keyword: str) -> KeywordAnalysis:
             f'"keyword_roi_score": 85.0, "internal_linking_suggestions": [...]}}'
         )
 
-        # Try structured output first
+    
         try:
             structured_llm = llm.with_structured_output(KeywordAnalysis)
             result = await structured_llm.ainvoke(prompt)
             if result is not None:
-                print(f"✅ Keyword Analysis (structured): {result.primary_keyword}")
+                logger.info("Keyword Analysis (structured): %s", result.primary_keyword)
                 return result
         except Exception as struct_err:
-            print(f"⚠️ Structured output failed, trying raw JSON: {struct_err}")
+            logger.warning("Structured output failed, trying raw JSON: %s", struct_err)
 
-        # Fallback: raw LLM call + manual parse
+       
         raw_result = await llm.ainvoke(prompt)
         text = raw_result.content.strip()
 
-        # Extract JSON from response
+        
         if "{" in text:
             json_str = text[text.index("{"):text.rindex("}") + 1]
             data = json.loads(json_str)
             result = KeywordAnalysis(**data)
-            print(f"✅ Keyword Analysis (parsed): {result.primary_keyword}")
+            logger.info("Keyword Analysis (parsed): %s", result.primary_keyword)
             return result
 
     except Exception as exc:
-        print(f"❌ Keyword node FAILED completely: {exc}")
+        logger.error("Keyword node FAILED completely: %s", exc)
 
-    # ABSOLUTE FALLBACK — never return None
-    print(f"🔄 Using fallback keyword analysis for: '{keyword}'")
+   
+    logger.warning("Using fallback keyword analysis for: '%s'", keyword)
     fallback = _FALLBACK_KEYWORD.model_copy()
-    # At least incorporate the user's keyword into the fallback
+
     if keyword and keyword.strip():
         fallback.primary_keyword = f"AI tools for {keyword} blogging SEO"
     return fallback

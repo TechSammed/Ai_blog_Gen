@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
-import os
+
 from models.schemas import SerpGap
+from core.utils import get_llm
+from core.logger import get_logger
 
+logger = get_logger("serp")
 
-# ---------- FALLBACK (NEVER RETURN None) ----------
 _FALLBACK_GAP = SerpGap(
     missing_topics=[
         "case studies and success stories",
@@ -31,14 +33,7 @@ async def analyze_serp(keyword: str) -> SerpGap:
     NEVER returns None — falls back to defaults on any error.
     """
     try:
-        from langchain_groq import ChatGroq
-
-        llm = ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY", ""),
-            model="llama-3.1-8b-instant",
-            temperature=0.3,
-            max_tokens=1000,
-        )
+        llm = get_llm(temperature=0.3, max_tokens=1000)
 
         prompt = (
             "You are an SEO expert.\n\n"
@@ -57,18 +52,15 @@ async def analyze_serp(keyword: str) -> SerpGap:
             "- Ensure valid JSON parsable by json.loads()\n\n"
             f"Input keyword: {keyword}"
         )
-
-        # Try structured output first
         try:
             structured_llm = llm.with_structured_output(SerpGap)
             result = await structured_llm.ainvoke(prompt)
             if result is not None:
-                print(f"✅ SERP Gap (structured): {len(result.missing_topics)} topics")
+                logger.info("SERP Gap (structured): %d topics", len(result.missing_topics))
                 return result
         except Exception as struct_err:
-            print(f"⚠️ SERP structured output failed, trying raw JSON: {struct_err}")
+            logger.warning("SERP structured output failed, trying raw JSON: %s", struct_err)
 
-        # Fallback: raw LLM call + manual parse
         raw_result = await llm.ainvoke(prompt)
         text = raw_result.content.strip()
 
@@ -76,12 +68,11 @@ async def analyze_serp(keyword: str) -> SerpGap:
             json_str = text[text.index("{"):text.rindex("}") + 1]
             data = json.loads(json_str)
             result = SerpGap(**data)
-            print(f"✅ SERP Gap (parsed): {len(result.missing_topics)} topics")
+            logger.info("SERP Gap (parsed): %d topics", len(result.missing_topics))
             return result
 
     except Exception as exc:
-        print(f"❌ SERP node FAILED completely: {exc}")
+        logger.error("SERP node FAILED completely: %s", exc)
 
-    # ABSOLUTE FALLBACK
-    print(f"🔄 Using fallback SERP gap for: '{keyword}'")
+    logger.warning("Using fallback SERP gap for: '%s'", keyword)
     return _FALLBACK_GAP.model_copy()

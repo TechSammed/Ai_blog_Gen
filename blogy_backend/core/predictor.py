@@ -5,6 +5,9 @@ import random
 from typing import Any
 
 from models.schemas import KeywordAnalysis, Prediction, SerpGap
+from core.logger import get_logger
+
+logger = get_logger("predictor")
 
 
 def _seed(keyword: str) -> int:
@@ -16,8 +19,8 @@ async def predict_performance(
     gap: SerpGap | dict[str, Any] | None,
 ) -> Prediction:
     """Compute a simulated performance prediction."""
-    
-    # Task 6: Safe Access
+
+    # Safe Access
     if isinstance(keyword_analysis, dict):
         kw_primary = keyword_analysis.get("primary_keyword", "AI blog automation")
         roi = keyword_analysis.get("keyword_roi_score", 70.0)
@@ -50,7 +53,6 @@ async def predict_performance(
     raw_score = gap_opportunity + cluster_breadth + roi_bonus + rng.uniform(-5, 5)
     seo_score = max(30, min(98, int(raw_score)))
 
-
     if seo_score >= 75:
         traffic = "High"
         est_traffic = rng.randint(8_000, 25_000)
@@ -61,7 +63,6 @@ async def predict_performance(
         traffic = "Low"
         est_traffic = rng.randint(300, 2_000)
 
-
     weakness_count = len(weaknesses)
     if weakness_count >= 6:
         difficulty = "Easy"
@@ -69,6 +70,11 @@ async def predict_performance(
         difficulty = "Medium"
     else:
         difficulty = "Hard"
+
+    logger.info(
+        "Prediction: SEO=%d | traffic=%s | difficulty=%s | est=%d/mo",
+        seo_score, traffic, difficulty, est_traffic,
+    )
 
     return Prediction(
         seo_score_predicted=seo_score,

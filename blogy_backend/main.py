@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from core.logger import setup_logging
+setup_logging()
+
 from api.routes import router
 
 app = FastAPI(

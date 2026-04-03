@@ -1,10 +1,22 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class KeywordInput(BaseModel):
-    keyword: str = Field(..., min_length=1)
+    keyword: str = Field(..., min_length=1, max_length=200)
+
+    @field_validator("keyword")
+    @classmethod
+    def sanitize_keyword(cls, v: str) -> str:
+        v = re.sub(r'<[^>]+>', '', v)                
+        v = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', v)  
+        v = ' '.join(v.split())                       
+        v = v.strip()
+        if not v:
+            raise ValueError('Keyword cannot be empty after sanitization')
+        return v
 
 class KeywordAnalysis(BaseModel):
     primary_keyword: str
@@ -24,7 +36,6 @@ class Prediction(BaseModel):
     estimated_monthly_traffic: int
 
 class SeoScore(BaseModel):
-    """Internal model used by seo.py validator. Flattened into Blog for API response."""
     seo_score: int
     keyword_density: float
     readability_score: int
@@ -41,7 +52,6 @@ class PlatformFormats(BaseModel):
     hashnode: str
 
 class Blog(BaseModel):
-    """Blog with FLAT SEO fields — no nested seo_score object."""
     title: str
     content: str
     seo_score: int = 0
@@ -82,7 +92,6 @@ class PipelineState(BaseModel):
     gap: Optional[SerpGap] = None
     prediction: Optional[Prediction] = None
 
-    # Internal state holds the blogs before they get seo and platforms added
     raw_blogs: list[dict[str, str]] = Field(default_factory=list)
     blogs: list[Blog] = Field(default_factory=list)
 
