@@ -5,14 +5,16 @@ import json
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from core.cache import GenerationCache
+from core.logger import get_logger
 from models.schemas import (
     Blog, BlogyAnalysis, GenerateResponse, ImprovementsMapping,
     KeywordAnalysis, KeywordInput, Prediction, SerpGap,
 )
 from pipeline.graph import run_pipeline, run_pipeline_stream
-from core.logger import get_logger
 
 logger = get_logger("routes")
+cache = GenerationCache()
 
 router = APIRouter(prefix="/api", tags=["blog-engine"])
 
@@ -92,6 +94,11 @@ async def generate_blog(payload: KeywordInput):
     NEVER throws — always returns structured JSON with status field.
     Blog SEO fields are FLAT (no nested seo_score object).
     """
+    cached_payload = cache.get(payload.keyword)
+    if cached_payload:
+        logger.info("Cache hit for keyword: %s", payload.keyword)
+        return GenerateResponse.model_validate(cached_payload)
+
     try:
         state = await run_pipeline(payload.keyword)
     except Exception as exc:
@@ -106,7 +113,10 @@ async def generate_blog(payload: KeywordInput):
             blogy_analysis=_FALLBACK_BLOGY,
         )
 
-    return _build_response(state)
+    response = _build_response(state)
+    if response.status == "success":
+        cache.set(payload.keyword, response.model_dump(mode="json"))
+    return response
 
 
 @router.post("/generate/stream")
@@ -120,6 +130,14 @@ async def generate_blog_stream(payload: KeywordInput):
     """
     async def event_stream():
         try:
+            cached_payload = cache.get(payload.keyword)
+            if cached_payload:
+                logger.info("Stream cache hit for keyword: %s", payload.keyword)
+                cached_response = GenerateResponse.model_validate(cached_payload)
+                yield f"data: {json.dumps({'type': 'result', 'data': cached_response.model_dump(mode='json')})}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+
             final_state = None
 
             async for event in run_pipeline_stream(payload.keyword):
@@ -133,6 +151,9 @@ async def generate_blog_stream(payload: KeywordInput):
                 response = _build_response(final_state)
             else:
                 response = _build_response({}, warnings=["Stream ended without final state"])
+
+            if response.status == "success":
+                cache.set(payload.keyword, response.model_dump(mode="json"))
 
             yield f"data: {json.dumps({'type': 'result', 'data': response.model_dump()})}\n\n"
             yield "data: [DONE]\n\n"

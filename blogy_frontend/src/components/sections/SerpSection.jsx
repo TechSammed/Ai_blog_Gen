@@ -12,7 +12,7 @@ export default function SerpSection() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
-      {/* ─── Summary Cards ─── */}
+      {/*Summary Cards*/}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-[#0a0a0c] border border-amber-500/10 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2 text-amber-400 mb-4">
@@ -35,7 +35,7 @@ export default function SerpSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* ─── Missing Topics ─── */}
+        {/*Missing Topics*/}
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
           <div className="mb-6">
             <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function SerpSection() {
           </div>
         </div>
 
-        {/* ─── Competitor Weaknesses ─── */}
+        {/*Competitor Weaknesses*/}
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
           <div className="mb-6">
             <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
@@ -83,7 +83,6 @@ export default function SerpSection() {
         </div>
       </div>
       <div className="bg-[#0a0a0c] border border-indigo-500/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-        {/* Subtle accent line */}
         <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/40" />
 
         <div className="flex items-start gap-5">

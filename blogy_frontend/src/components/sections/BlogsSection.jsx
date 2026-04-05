@@ -7,7 +7,6 @@ import {
   Eye, Copy, CheckSquare, PenLine, Award
 } from 'lucide-react';
 
-// Platform config without the icons
 const PLATFORM_CONFIG = {
   medium: { label: 'Medium', activeClass: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/5' },
   linkedin: { label: 'LinkedIn', activeClass: 'text-blue-400 border-blue-500/30 bg-blue-500/5' },
@@ -191,7 +190,6 @@ export default function BlogsSection() {
   );
 }
 
-// Flat, Clean SEO Badge
 function SEOBadge({ label, value, good }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium border
@@ -202,4 +200,4 @@ function SEOBadge({ label, value, good }) {
     </div>
   );
 }
-
+

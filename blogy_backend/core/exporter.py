@@ -22,7 +22,6 @@ async def format_for_platforms(title: str, content: str) -> PlatformFormats:
     Each platform version is 200-300 words, uniquely adapted.
     Returns valid JSON with proper escaping.
     """
-    # Shortcut fallback if no API key
     if not os.environ.get("GROQ_API_KEY"):
         return _make_fallback(title, content)
 

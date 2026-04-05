@@ -19,7 +19,7 @@ export default function PredictionSection() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
-      {/* ─── Main Metrics ─── */}
+      {/*Main Metrics*/}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
         {/* Custom, Flat SEO Score Ring */}
@@ -51,7 +51,7 @@ export default function PredictionSection() {
         />
       </div>
 
-      {/* ─── Traffic Projection Bar Chart ─── */}
+      {/*Traffic Projection Bar Chart */}
       <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
         <h3 className="text-zinc-100 font-semibold mb-6 flex items-center gap-2">
           <BarChart2 size={16} className="text-blue-400" />
@@ -90,7 +90,7 @@ export default function PredictionSection() {
         </div>
       </div>
 
-      {/* ─── Insights ─── */}
+      {/*Insights*/}
       <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
         <h3 className="text-zinc-100 font-semibold mb-5 flex items-center gap-2">
           <AlertTriangle size={16} className="text-amber-400" />
@@ -123,7 +123,6 @@ export default function PredictionSection() {
   );
 }
 
-// Clean, Flat Stat Card
 function StatCard({ icon, label, value, color, sub }) {
   const colorMap = {
     emerald: 'text-emerald-400',
@@ -151,7 +150,6 @@ function StatCard({ icon, label, value, color, sub }) {
   );
 }
 
-// Premium Insight Card with SVG Icons
 function InsightCard({ icon, title, body }) {
   return (
     <div className="rounded-xl p-5 bg-zinc-900/50 border border-white/5 hover:bg-zinc-900/80 hover:border-white/10 transition-colors">

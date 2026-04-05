@@ -46,7 +46,7 @@ export default function GenerateSection() {
   return (
     <div className="w-full max-w-5xl mx-auto space-y-12 pb-24 px-4 sm:px-6">
 
-      {/* ─── Hero Section ─── */}
+      {/*Hero Section*/}
       <div className="flex flex-col items-center text-center pt-20 pb-8 sm:pb-12">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 border rounded-full bg-indigo-500/10 border-indigo-500/20 backdrop-blur-md transition-colors hover:bg-indigo-500/20">
           <Sparkles size={14} className="text-indigo-400" />
@@ -62,7 +62,6 @@ export default function GenerateSection() {
         </p>
       </div>
 
-      {/* ─── Input Command Bar ─── */}
       {!isLoading && !error && (
         <div className="w-full max-w-5xl mx-auto px-2 sm:px-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -115,7 +114,7 @@ export default function GenerateSection() {
         </div>
       )}
 
-      {/* ─── Error State ─── */}
+      {/*Error State*/}
       {error && (
         <div className="w-full max-w-3xl mx-auto mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="p-6 sm:p-8 border rounded-3xl bg-red-950/10 border-red-900/30 flex flex-col sm:flex-row items-start gap-5">
@@ -140,9 +139,9 @@ export default function GenerateSection() {
         </div>
       )}
 
-      {/* ─── Loading State ─── */}
+      {/*Loading State*/}
       {isLoading && (
-        <div className="w-full max-w-2xl mx-auto p-8 sm:p-12 glass-card rounded-[2rem] sm:rounded-[2.5rem] animate-in fade-in zoom-in-95 duration-500">
+        <div className="w-full max-w-2xl mx-auto p-8 sm:p-12 glass-card rounded-4xl sm:rounded-[2.5rem] animate-in fade-in zoom-in-95 duration-500">
           <div className="flex flex-col items-center text-center mb-10">
             <div className="flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-indigo-500/10 border border-indigo-500/20 glow-purple">
               <Loader2 size={28} className="text-indigo-400 animate-spin" />
@@ -181,7 +180,7 @@ export default function GenerateSection() {
       {/* ─── Success Result Summary ─── */}
       {result && !isLoading && (
         <div className="w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="p-8 sm:p-10 glass-card rounded-[2rem] sm:rounded-[2.5rem]">
+          <div className="p-8 sm:p-10 glass-card rounded-4xl sm:rounded-[2.5rem]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 pb-8 border-b border-white/10 gap-6">
               <div className="flex items-center gap-5">
                 <div className="flex items-center justify-center w-14 h-14 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 glow-purple">
@@ -218,7 +217,7 @@ export default function GenerateSection() {
             {PIPELINE_NODES.map((node) => {
               const Icon = node.icon;
               return (
-                <div key={node.num} className="flex flex-col p-6 transition-all duration-300 glass-card rounded-[1.5rem] hover:bg-white/[0.03] hover:border-indigo-500/30 hover:shadow-lg hover:-translate-y-1 group">
+                <div key={node.num} className="flex flex-col p-6 transition-all duration-300 glass-card rounded-3xl hover:bg-white/3 hover:border-indigo-500/30 hover:shadow-lg hover:-translate-y-1 group">
                   <div className="flex items-center justify-center w-12 h-12 mb-6 rounded-full bg-white/5 text-slate-400 group-hover:bg-indigo-500 group-hover:text-white group-hover:shadow-[0_0_20px_rgba(129,140,248,0.4)] transition-all duration-300">
                     <Icon size={20} strokeWidth={2.5} />
                   </div>
@@ -239,7 +238,7 @@ export default function GenerateSection() {
 function StatCard({ label, value }) {
   return (
     <div className="flex flex-col p-6 rounded-[1.25rem] bg-black/20 border border-white/5 relative overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-linear-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <div className="mb-2 text-sm font-semibold text-slate-400 relative z-10">{label}</div>
       <div className="text-3xl sm:text-4xl font-bold tracking-tight text-white relative z-10">{value}</div>
     </div>

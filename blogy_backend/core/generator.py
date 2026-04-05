@@ -30,6 +30,41 @@ BANNED_PHRASES = [
 ]
 
 
+def _enforce_density_cap(content: str, keyword: str, target_max: float = 2.0) -> str:
+    """Reduce overuse of single-word keywords to keep density in a natural range."""
+    normalized = keyword.strip()
+    if not normalized or len(normalized.split()) != 1:
+        return content
+
+    current = keyword_density(content, normalized)
+    if current <= target_max:
+        return content
+
+    pattern = re.compile(rf"\b{re.escape(normalized)}\b", re.IGNORECASE)
+    matches = list(pattern.finditer(content))
+    if len(matches) <= 1:
+        return content
+
+    replacement = "the platform"
+    chars = list(content)
+    # Keep first mention and replace every second mention until density drops.
+    replace_indexes = [m for i, m in enumerate(matches[1:], start=1) if i % 2 == 0]
+
+    offset = 0
+    for m in replace_indexes:
+        start = m.start() + offset
+        end = m.end() + offset
+        chars[start:end] = list(replacement)
+        offset += len(replacement) - (m.end() - m.start())
+
+        candidate = "".join(chars)
+        if keyword_density(candidate, normalized) <= target_max:
+            logger.info("Applied keyword-density cap for '%s' (%.2f%% -> %.2f%%)", normalized, current, keyword_density(candidate, normalized))
+            return candidate
+
+    return "".join(chars)
+
+
 def _kill_banned_phrases(content: str) -> str:
     """Remove banned AI-sounding phrases from content."""
     result = content
@@ -132,6 +167,10 @@ async def _quality_pipeline(blog_content: str, keyword: str) -> str:
 
     #STEP 3: Calculate density AFTER cleaning 
     final_density = keyword_density(content, keyword)
+    if final_density > 2.0:
+        content = _enforce_density_cap(content, keyword, target_max=2.0)
+        final_density = keyword_density(content, keyword)
+
     final_read = flesch_reading_ease(content)
     final_ai = ai_detection_score(content)
     final_words = len(content.split())

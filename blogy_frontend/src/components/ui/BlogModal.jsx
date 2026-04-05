@@ -61,12 +61,12 @@ export default function BlogModal({ blog, platform: initialPlatform, onClose }) 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-[#050508]/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 sm:p-8 bg-[#050508]/80 backdrop-blur-md animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-3xl h-[85vh] sm:h-[82vh] flex flex-col bg-[#0a0a0f]/95 backdrop-blur-2xl border border-white/[0.08] ring-1 ring-white/[0.02] rounded-3xl shadow-[0_30px_80px_-15px_rgba(0,0,0,1)] animate-scale-in overflow-hidden">
+      <div className="w-full max-w-3xl h-[85vh] sm:h-[82vh] flex flex-col bg-[#0a0a0f]/95 backdrop-blur-2xl border border-white/8 ring-1 ring-white/2 rounded-3xl shadow-[0_30px_80px_-15px_rgba(0,0,0,1)] animate-scale-in overflow-hidden">
         {/* Modal header */}
-        <div className="flex items-start justify-between gap-6 p-6 md:px-8 border-b border-white/[0.06] shrink-0 bg-white/[0.01]">
+        <div className="flex items-start justify-between gap-6 p-6 md:px-8 border-b border-white/6 shrink-0 bg-white/1">
           <div className="flex-1 min-w-0">
             <h2 className="text-white font-bold text-lg leading-tight line-clamp-2">{blog.title}</h2>
             <p className="text-slate-500 text-xs mt-1">
@@ -80,27 +80,27 @@ export default function BlogModal({ blog, platform: initialPlatform, onClose }) 
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-all ${
                 isEditing
                   ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/30'
-                  : 'bg-white/[0.07] hover:bg-white/[0.12] text-slate-300 hover:text-white border-white/[0.08]'
+                  : 'bg-white/[0.07] hover:bg-white/12 text-slate-300 hover:text-white border-white/8'
               }`}
             >
               {isEditing ? <><Eye size={12} /> Preview</> : <><PenLine size={12} /> Edit</>}
             </button>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-slate-300 hover:text-white text-xs border border-white/[0.08] transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/12 text-slate-300 hover:text-white text-xs border border-white/8 transition-all"
             >
               {copied ? <><CheckSquare size={12} className="text-emerald-400" /> Copied!</> : <><Copy size={12} /> Copy</>}
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-slate-300 hover:text-white text-xs border border-white/[0.08] transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/12 text-slate-300 hover:text-white text-xs border border-white/8 transition-all"
               title="Download as Markdown"
             >
               <Download size={12} /> Download
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-slate-400 hover:text-white border border-white/[0.08] transition-all"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/[0.07] hover:bg-white/12 text-slate-400 hover:text-white border border-white/8 transition-all"
             >
               <X size={16} />
             </button>
@@ -113,7 +113,7 @@ export default function BlogModal({ blog, platform: initialPlatform, onClose }) 
             <button
               onClick={() => setActivePlatform(null)}
               className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all border
-                ${!activePlatform ? 'bg-white/[0.12] text-white border-white/20' : 'bg-white/[0.04] text-slate-500 border-white/[0.06] hover:border-white/[0.12]'}`}
+                ${!activePlatform ? 'bg-white/12 text-white border-white/20' : 'bg-white/4 text-slate-500 border-white/6 hover:border-white/12'}`}
             >
               Original
             </button>
@@ -123,7 +123,7 @@ export default function BlogModal({ blog, platform: initialPlatform, onClose }) 
                   key={key}
                   onClick={() => setActivePlatform(key)}
                   className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all border
-                    ${activePlatform === key ? cfg.color : 'bg-white/[0.04] text-slate-500 border-white/[0.06] hover:border-white/[0.12] hover:text-slate-300'}`}
+                    ${activePlatform === key ? cfg.color : 'bg-white/4 text-slate-500 border-white/6 hover:border-white/12 hover:text-slate-300'}`}
                 >
                   {cfg.label}
                 </button>

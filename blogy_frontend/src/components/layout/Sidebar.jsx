@@ -1,4 +1,5 @@
-import { useApp, SECTIONS } from '../../hooks/useAppContext';
+import { useApp } from '../../hooks/useAppContext';
+import { SECTIONS } from '../../constants/appConfig';
 import {
   Zap, Search, Activity, TrendingUp, FileText, LayoutGrid,
   ChevronRight, Menu
@@ -39,21 +40,21 @@ export default function Sidebar() {
       <aside
         className={`fixed top-0 left-0 h-screen z-40 flex flex-col transition-all duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-16'}
-          bg-[#0d0d16] border-r border-white/[0.08]`}
+          bg-[#0d0d16] border-r border-white/8`}
       >
       {/* Logo & Toggle Header */}
-      <div className={`flex items-center h-16 border-b border-white/[0.08] shrink-0 ${sidebarOpen ? 'px-5 justify-between' : 'justify-center'}`}>
+      <div className={`flex items-center h-16 border-b border-white/8 shrink-0 ${sidebarOpen ? 'px-5 justify-between' : 'justify-center'}`}>
 
         {/* Left side: Minimal Logo & Text */}
         {sidebarOpen && (
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-7 h-7 rounded bg-white/[0.08] border border-white/[0.1] flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded bg-white/8 border border-white/10 flex items-center justify-center shrink-0">
               <Zap size={14} className="text-slate-200" />
             </div>
             <div className="overflow-hidden">
               <span className="text-slate-200 font-semibold text-sm tracking-wide leading-none flex items-center">
                 Blogy
-                <span className="text-slate-400 text-[10px] ml-1.5 border border-white/[0.1] px-1 py-0.5 rounded uppercase">AI</span>
+                <span className="text-slate-400 text-[10px] ml-1.5 border border-white/10 px-1 py-0.5 rounded uppercase">AI</span>
               </span>
             </div>
           </div>
@@ -62,7 +63,7 @@ export default function Sidebar() {
         {/* Toggle Menu Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="w-8 h-8 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] transition-all shrink-0"
+          className="w-8 h-8 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all shrink-0"
           title={sidebarOpen ? "Close Sidebar" : "Open Sidebar"}
         >
           <Menu size={16} />
@@ -86,8 +87,8 @@ export default function Sidebar() {
               title={!sidebarOpen ? section.label : ''}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150 group
                 ${isActive
-                  ? 'bg-white/[0.08] text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                  ? 'bg-white/8 text-white'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/3'
                 }`}
             >
               {/* Minimal Icon */}

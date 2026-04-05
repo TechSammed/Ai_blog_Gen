@@ -1,4 +1,5 @@
-import { useApp, SECTIONS } from '../../hooks/useAppContext';
+import { useApp } from '../../hooks/useAppContext';
+import { SECTIONS } from '../../constants/appConfig';
 import { Clock, Menu } from 'lucide-react';
 
 const PIPELINE_STEPS_SHORT = ['Keywords', 'SERP', 'Predict', 'Generate', 'SEO', 'Export', 'Analysis'];
@@ -11,7 +12,7 @@ export default function TopBar() {
   const formatTime = (s) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 
   return (
-    <header className={`fixed top-0 right-0 z-30 h-16 flex items-center bg-[#0d0d16]/95 backdrop-blur-md border-b border-white/[0.08] transition-all duration-300 left-0 md:left-16 ${sidebarOpen ? 'md:left-64' : ''}`}
+    <header className={`fixed top-0 right-0 z-30 h-16 flex items-center bg-[#0d0d16]/95 backdrop-blur-md border-b border-white/8 transition-all duration-300 left-0 md:left-16 ${sidebarOpen ? 'md:left-64' : ''}`}
     >
       <div className="flex items-center justify-between w-full px-4 md:px-6 gap-4">
         {/* Left: Breadcrumb & Mobile Toggle */}
@@ -51,8 +52,8 @@ export default function TopBar() {
                     </span>
                   </div>
                   {i < PIPELINE_STEPS_SHORT.length - 1 && (
-                    <div className={`w-6 h-[1px] mb-3 transition-colors duration-500
-                      ${isDone ? 'bg-slate-500/50' : 'bg-white/[0.05]'}`}
+                    <div className={`w-6 h-px mb-3 transition-colors duration-500
+                      ${isDone ? 'bg-slate-500/50' : 'bg-white/5'}`}
                     />
                   )}
                 </div>
@@ -64,7 +65,7 @@ export default function TopBar() {
         {/* Right: Timer (Minimalist) */}
         <div className="flex items-center gap-3">
           {isLoading && (
-            <div className="flex items-center gap-1.5 bg-white/[0.03] border border-white/[0.08] px-3 py-1.5 rounded-md">
+            <div className="flex items-center gap-1.5 bg-white/3 border border-white/8 px-3 py-1.5 rounded-md">
               <Clock size={12} className="text-slate-400" />
               <span className="text-slate-300 text-xs font-mono">{formatTime(elapsedTime)}</span>
             </div>

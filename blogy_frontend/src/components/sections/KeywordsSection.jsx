@@ -11,13 +11,12 @@ export default function KeywordsSection() {
 
   const roiColor = kw.keyword_roi_score >= 80 ? 'emerald' : kw.keyword_roi_score >= 60 ? 'yellow' : 'red';
 
-  // Dynamic solid background color for the progress bar
   const roiBarBg = kw.keyword_roi_score >= 80 ? 'bg-emerald-500' : kw.keyword_roi_score >= 60 ? 'bg-amber-500' : 'bg-rose-500';
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
-      {/* ─── Header Stats ─── */}
+      {/*Header Stats*/}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <MetricCard
           label="Primary Keyword"
@@ -47,7 +46,7 @@ export default function KeywordsSection() {
         />
       </div>
 
-      {/* ─── ROI Score Bar (Clean, Solid Color) ─── */}
+      {/*ROI Score Bar*/}
       <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-zinc-100 font-semibold">Keyword ROI Score</h3>
@@ -67,7 +66,7 @@ export default function KeywordsSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        {/* ─── Secondary Keywords ─── */}
+        {/*Secondary Keywords*/}
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
@@ -91,7 +90,7 @@ export default function KeywordsSection() {
           </div>
         </div>
 
-        {/* ─── Long-tail Keywords ─── */}
+        {/* Long-tail Keywords */}
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
@@ -117,7 +116,7 @@ export default function KeywordsSection() {
         </div>
       </div>
 
-      {/* ─── Internal Linking ─── */}
+      {/*Internal Linking*/}
       {kw.internal_linking_suggestions?.length > 0 && (
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
           <h3 className="text-zinc-100 font-semibold mb-5 flex items-center gap-2">
@@ -139,8 +138,6 @@ export default function KeywordsSection() {
     </div>
   );
 }
-
-// Clean, Colorful, Flat Metric Card
 function MetricCard({ label, value, icon, color, badge, small }) {
   const colorMap = {
     violet: { icon: 'text-violet-400', value: 'text-zinc-100', badge: 'bg-violet-500/10 text-violet-400 border-violet-500/20' },
