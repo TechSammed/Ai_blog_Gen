@@ -11,7 +11,14 @@ export default function PredictionSection() {
   const { result } = useApp();
   const p = result?.prediction;
 
-  if (!p) return <EmptyState icon="📈" text="Generate a blog first to see performance predictions" />;
+  if (!p) {
+    return (
+      <EmptyState
+        icon={<BarChart2 size={32} className="text-zinc-600 mb-4" />}
+        text="Generate a blog first to see performance predictions"
+      />
+    );
+  }
 
   const difficultyColor = { Easy: 'emerald', Medium: 'yellow', Hard: 'red', Low: 'emerald', High: 'red' }[p.ranking_difficulty] || 'yellow';
   const trafficColor = { Low: 'red', Medium: 'yellow', High: 'emerald', 'Very High': 'violet' }[p.traffic_potential] || 'blue';

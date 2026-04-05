@@ -24,7 +24,7 @@ export default function Sidebar() {
       serp: !!result.gap,
       prediction: !!result.prediction,
       blogs: result.blogs?.length > 0,
-      blogy: !!result.blogy_analysis,
+      insight: !!result.blogy_analysis,
     };
     return map[section] ?? false;
   };
@@ -53,7 +53,7 @@ export default function Sidebar() {
             </div>
             <div className="overflow-hidden">
               <span className="text-slate-200 font-semibold text-sm tracking-wide leading-none flex items-center">
-                Blogy
+                QuillNexus
                 <span className="text-slate-400 text-[10px] ml-1.5 border border-white/10 px-1 py-0.5 rounded uppercase">AI</span>
               </span>
             </div>

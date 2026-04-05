@@ -6,7 +6,7 @@ import KeywordsSection from './components/sections/KeywordsSection';
 import SerpSection from './components/sections/SerpSection';
 import PredictionSection from './components/sections/PredictionSection';
 import BlogsSection from './components/sections/BlogsSection';
-import BlogySection from './components/sections/BlogySection';
+import InsightSection from './components/sections/NexusSection';
 
 const SECTION_MAP = {
   generate: GenerateSection,
@@ -14,7 +14,7 @@ const SECTION_MAP = {
   serp: SerpSection,
   prediction: PredictionSection,
   blogs: BlogsSection,
-  blogy: BlogySection,
+  insight: InsightSection,
 };
 
 export default function App() {

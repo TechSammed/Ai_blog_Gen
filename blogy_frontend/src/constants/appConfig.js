@@ -4,7 +4,7 @@ export const SECTIONS = [
   { id: 'serp', label: 'SERP Gap', icon: 'activity' },
   { id: 'prediction', label: 'Performance', icon: 'trending-up' },
   { id: 'blogs', label: 'Blogs', icon: 'file-text' },
-  { id: 'blogy', label: 'Dashboard Analysis', icon: 'layout-grid' },
+  { id: 'insight', label: 'Dashboard Analysis', icon: 'layout-grid' },
 ];
 
 export const PIPELINE_STEPS = [

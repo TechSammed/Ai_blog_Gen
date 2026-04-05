@@ -41,31 +41,31 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 45%, #94a3b8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .gradient-text-blue {
-    background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+    background: linear-gradient(135deg, #cbd5e1 0%, #93c5fd 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(15, 17, 24, 0.84);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.14);
   }
 
   .glow-purple {
-    box-shadow: 0 0 40px rgba(129, 140, 248, 0.15), 0 0 80px rgba(129, 140, 248, 0.05);
+    box-shadow: 0 0 16px rgba(148, 163, 184, 0.14);
   }
 
   .glow-blue {
-    box-shadow: 0 0 40px rgba(96, 165, 250, 0.15);
+    box-shadow: 0 0 14px rgba(148, 163, 184, 0.12);
   }
 
   .animate-float {
@@ -84,16 +84,16 @@
 .bg-orb {
   position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(96px);
   pointer-events: none;
   z-index: 0;
-  animation: float 8s ease-in-out infinite;
+  animation: float 14s ease-in-out infinite;
 }
 
 .bg-orb-1 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.08) 0%, transparent 72%);
   top: -100px;
   right: 10%;
 }
@@ -101,19 +101,19 @@
 .bg-orb-2 {
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(100, 116, 139, 0.07) 0%, transparent 72%);
   bottom: 20%;
   left: 5%;
-  animation-delay: -3s;
+  animation-delay: -5s;
 }
 
 .bg-orb-3 {
   width: 250px;
   height: 250px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(148, 163, 184, 0.06) 0%, transparent 72%);
   top: 40%;
   right: 30%;
-  animation-delay: -6s;
+  animation-delay: -9s;
 }
 
 /* Sidebar animations */

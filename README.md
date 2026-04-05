@@ -1,4 +1,4 @@
-# AI Blog Intelligence Engine
+# QuillNexus AI Blog Intelligence Engine
 
 The **AI Blog Intelligence Engine** is a full-stack application built with **FastAPI + LangGraph** (backend) and **React + Vite + Tailwind** (frontend). It orchestrates a 7-node AI pipeline that transforms a single keyword into SEO-optimized, multi-platform blog content.
 
@@ -18,7 +18,7 @@ Keyword → Node 1 → Node 2 → Node 3 → Node 4 → Node 5 → Node 6 → No
 | 4 | **Blog Generator** | Multi-step LLM content generation (3 blogs) |
 | 5 | **SEO Validator** | Keyword density, readability, AI-detection scoring |
 | 6 | **Platform Exporter** | Multi-platform formatting (Medium, LinkedIn, WordPress, Dev.to, Hashnode) |
-| 7 | **Blogy Analysis** | Dashboard audit with UX, SEO, conversion & technical insights |
+| 7 | **QuillNexus Analysis** | Dashboard audit with UX, SEO, conversion & technical insights |
 
 ---
 

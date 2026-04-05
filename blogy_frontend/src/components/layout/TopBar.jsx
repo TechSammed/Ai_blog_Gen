@@ -25,7 +25,7 @@ export default function TopBar() {
             <Menu size={20} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-slate-500 text-sm hidden sm:inline">Blogy</span>
+            <span className="text-slate-500 text-sm hidden sm:inline">QuillNexus</span>
             <span className="text-slate-700 hidden sm:inline">/</span>
             <span className="text-slate-200 text-sm font-medium">{currentSection?.label}</span>
           </div>

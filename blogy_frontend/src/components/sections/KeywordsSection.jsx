@@ -1,13 +1,20 @@
 import React from 'react';
 import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
-import { Tag, Star, Link2, TrendingUp } from 'lucide-react';
+import { Tag, Star, Link2, TrendingUp, Search } from 'lucide-react';
 
 export default function KeywordsSection() {
   const { result } = useApp();
   const kw = result?.keyword_analysis;
 
-  if (!kw) return <EmptyState icon="🔍" text="Generate a blog first to see keyword analysis" />;
+  if (!kw) {
+    return (
+      <EmptyState
+        icon={<Search size={32} className="text-zinc-600 mb-4" />}
+        text="Generate a blog first to see keyword analysis"
+      />
+    );
+  }
 
   const roiColor = kw.keyword_roi_score >= 80 ? 'emerald' : kw.keyword_roi_score >= 60 ? 'yellow' : 'red';
 
