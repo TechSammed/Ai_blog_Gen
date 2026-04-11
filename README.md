@@ -7,7 +7,7 @@ The **AI Blog Intelligence Engine** is a full-stack application built with **Fas
 ## System Pipeline Architecture
 
 ```
-Keyword → Node 1 → Node 2 → Node 3 → Node 4 → Node 5 → Node 6 → Node 7 → Result
+Keyword → Node 1 → Node 2 → Node 3 → Node 4 → Node 5 → Node 6 → Node 7 → Result.
 ```
 
 | Node | Name | What It Does |
