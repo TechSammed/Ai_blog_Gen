@@ -36,6 +36,7 @@ Keyword → Node 1 → Node 2 → Node 3 → Node 4 → Node 5 → Node 6 → No
 - Python 3.10+
 - Node.js 18+
 - A [Groq API Key](https://console.groq.com/keys)
+- Langchain API
 
 ### 1. Clone & Navigate
 ```bash
@@ -67,7 +68,7 @@ The API will be running at `http://localhost:8000`
 
 ### 3. Frontend Setup
 ```bash
-cd ../blogy_frontend
+cd blogy_frontend
 
 # Install dependencies
 npm install
