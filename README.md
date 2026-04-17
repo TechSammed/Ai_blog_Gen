@@ -48,158 +48,89 @@ Keyword Input
     ▼
 Full Pipeline Result (JSON)
 ```
+## 🔄 Pipeline Overview
 
-### Phase 1 — Keyword Intelligence 🔍
+### Phase 1 — Keyword Intelligence 🔍  
+Generates optimized keywords from the input keyword.
 
-**File:** `core/keyword.py`
+It produces:
+- Primary keyword (refined version)
+- Secondary keywords
+- Long-tail keywords  
+- Basic SEO relevance (ROI score)
 
-| Output Field | Description |
-|---|---|
-| `primary_keyword` | SEO-upgraded keyword variant (generic inputs are auto-improved) |
-| `secondary_keywords` | 5 highly relevant related keywords |
-| `long_tail_keywords` | 6 startup/marketer-focused long-tail variations |
-| `keyword_roi_score` | Float 70–99 reflecting B2B SaaS content ROI |
-| `internal_linking_suggestions` | 3 internal URL slugs for link-building |
-
-- Uses **LangChain structured output** with automatic fallback to raw JSON parsing
-- Detects generic inputs (e.g., `"food"`) and auto-upgrades them to SEO-aware variants
-- Zero-crash guarantee: full fallback dataset used if LLM unavailable
+This helps in building a strong SEO foundation before content generation.
 
 ---
 
-### Phase 2 — SERP Gap Analyzer 📊
+### Phase 2 — SERP Gap Analyzer 📊  
+Analyzes existing search results to identify content gaps and competitor weaknesses.
 
-**File:** `core/serp.py`
+It focuses on:
+- Missing topics in top-ranking pages  
+- Weak areas in competitor content  
 
-Identifies **what is missing** in current search results for the keyword and surfaces **competitor weaknesses**.
-
-| Output Field | Description |
-|---|---|
-| `missing_topics` | ≥5 content gaps not covered by current top-ranking pages |
-| `competitor_weakness` | ≥5 structural/technical weaknesses in competing content |
-
-- Results feed directly into the blog generator as content briefs
-- Uses `temperature=0.3` for deterministic, research-quality outputs
+These insights are used to generate more competitive and valuable blogs.
 
 ---
 
-### Phase 3 — Performance Predictor 📈
+### Phase 3 — Performance Predictor 📈  
+Estimates how well the content will perform before publishing.
 
-**File:** `core/predictor.py`
+It predicts:
+- SEO score  
+- Traffic potential  
+- Ranking difficulty  
 
-A **deterministic scoring engine** (seeded by MD5 hash for reproducibility) that computes realistic performance forecasts.
+This helps in understanding whether the keyword is worth targeting.
 
-| Output Field | Values |
-|---|---|
-| `seo_score_predicted` | 30–98 computed score |
-| `traffic_potential` | `High`, `Medium`, or `Low` |
-| `ranking_difficulty` | `Easy`, `Medium`, or `Hard` |
-| `estimated_monthly_traffic` | 300–25,000 monthly visitors |
+---
 
-**Scoring formula:**
+### Phase 4 — Blog Generator ✍️  
+Generates SEO-optimized blog content using AI.
+
+It ensures:
+- Proper structure (headings, sections)  
+- Controlled keyword usage  
+- Readable and human-like writing  
+
+Multiple blog variations can be generated for better flexibility.
+
+---
+
+### Phase 5 — SEO Validator ✅  
+Evaluates the generated blog using important SEO metrics.
+
+It checks:
+- Keyword density  
+- Readability score  
+- Content quality  
+
+Based on this, it assigns a final SEO score and improves weak areas.
+
+---
+
+### Phase 6 — Platform Exporter 🌐  
+Formats the blog for different platforms like:
+
+- Medium  
+- LinkedIn  
+- WordPress  
+
+Each version follows platform-specific writing styles, tone, and formatting to maximize engagement.
+
+---
+
+### Phase 7 — Dashboard Analysis 🧠  
+Provides insights and improvement suggestions based on generated content.
+
+Includes recommendations for:
+- SEO improvements  
+- User experience  
+- Feature enhancements  
+
+Helps in refining both content strategy and overall product performance.
 ```
-raw_score = (gap_opportunity × 6) + (cluster_breadth × 4) + (roi × 0.3) + noise
-```
-- `High` traffic: 8,000–25,000/mo | `Medium`: 2,000–8,000/mo | `Low`: 300–2,000/mo
-- Fully deterministic — same keyword always produces same prediction
-
----
-
-### Phase 4 — Blog Generator ✍️
-
-**File:** `core/generator.py`
-
-The most complex node. Generates **3 blogs** (1 general + 2 brand-specific) sequentially with a built-in **multi-step quality pipeline**.
-
-#### Blogs Generated
-| Blog | Title Pattern | Audience |
-|---|---|---|
-| Blog 1 | General SEO blog for the input keyword | Broad web audience |
-| Blog 2 | `"Blogy – Best AI Blog Automation Tool in India"` | Indian SMBs & creators |
-| Blog 3 | `"How Blogy is Disrupting Martech – Organic Traffic on Autopilot"` | MarTech founders |
-
-#### Quality Pipeline (runs after every generation)
-```
-Raw LLM Output
-    │
-    ├── Step 1: Kill banned phrases  (30+ AI-sounding clichés removed)
-    ├── Step 2: Split long sentences (>20 words split at conjunctions)
-    ├── Step 3: LLM density rewrite  (keyword density capped to 1–2%)
-    ├── Step 4: Re-apply banned phrase filter
-    └── Step 5: Final metrics log   (density, readability, AI-score, word count)
-```
-
-**Banned phrases include:** `"revolutionizing"`, `"game-changer"`, `"dive deep"`, `"cutting-edge"`, `"paradigm shift"`, `"synergy"`, `"groundbreaking"`, and 20+ more.
-
-**Constraints enforced:**
-- Word count: 800–1,000 per blog
-- Keyword density: 1%–2%
-- Max sentence length: 20 words
-- Paragraphs: 2–3 lines
-- Structure: Hook → H2 Sections → Real Example → Content Gaps → FAQ → CTA
-
----
-
-### Phase 5 — SEO Validator ✅
-
-**File:** `core/seo.py`
-
-Runs a comprehensive validation suite on every generated blog.
-
-| Metric | Computation |
-|---|---|
-| `keyword_density` | Regex-based with multi-word semantic fallback |
-| `readability_score` | Flesch Reading Ease (206.835 formula) |
-| `ai_detection_score` | Pattern-matching against 20+ AI indicator phrases |
-| `humanization_score` | `100 - ai_detection_score` |
-| `snippet_readiness` | FAQ-format Q&A detection for featured snippet eligibility |
-| `featured_snippet` | Best candidate paragraph extracted for Google answer box |
-| `seo_score` | Composite: `(density×0.25) + (readability×0.25) + (human×0.20) + bonuses` |
-
-**Score bonuses:**
-- +10 for FAQ/snippet presence
-- +2 per `## heading` (up to +10)
-- Length bonus: +1 per 150 words (up to +15)
-
----
-
-### Phase 6 — Platform Exporter 🌐
-
-**File:** `core/exporter.py`
-
-Adapts each blog for **5 publishing platforms** with platform-native formatting:
-
-| Platform | Format Style |
-|---|---|
-| **Medium** | Storytelling hook + personal insights + follow CTA |
-| **LinkedIn** | Professional tone + bold hook + 2–3 emojis + hashtags |
-| **WordPress** | `<!-- Meta Title -->` + `<!-- Meta Description -->` + SEO comments |
-| **Dev.to** | YAML frontmatter (`title`, `published`, `tags`) + content |
-| **Hashnode** | TL;DR bullet summary + full content + engagement prompt |
-
-- Uses 3-strategy resilience: structured output → raw JSON parse → graceful fallback
-- Rate-limit safe: 1.5s delay between blog exports
-
----
-
-### Phase 7 — QuillNexus Dashboard Analysis 🧠
-
-**File:** `core/blogy_analysis.py`
-
-A **dynamic AI product strategist** that audits the Blogy platform using the actual generated blog metrics as context input.
-
-| Analysis Category | Description |
-|---|---|
-| `ux_issues` | Usability problems (drag-and-drop, autosave, mobile, onboarding) |
-| `seo_issues` | Meta, canonical, JSON-LD, Open Graph, sitemap gaps |
-| `conversion_gaps` | Missing email capture, A/B testing, social share, exit-intent |
-| `technical_risks` | Rate limiting, XSS, auth vulnerabilities, scaling risks |
-| `feature_suggestions` | AI outline generator, real-time SEO sidebar, content calendar |
-| `product_differentiation` | Positioning vs. WordPress, Ghost, and generic AI tools |
-| `scalability` | Migration path from 500 → 50,000 concurrent users |
-| `improvements_mapping` | Side-by-side: `missing_feature` → `your_solution` |
-
----
 
 ## 🏗️ System Architecture
 
@@ -438,7 +369,7 @@ cp .env.example .env
 # Edit .env — add your GROQ_API_KEY
 ```
 
-**`.env` file:**
+**.env file:**
 ```env
 GROQ_API_KEY=gsk_your_key_here
 LANGCHAIN_API_KEY=ls__your_key_here   # Optional — for LangSmith tracing
@@ -470,106 +401,6 @@ npm run dev
 
 ---
 
-## 📡 API Reference
-
-### `POST /api/generate`
-
-Full pipeline execution. Returns all 7 node outputs in a single JSON response.
-
-**Request:**
-```json
-{
-  "keyword": "AI content marketing"
-}
-```
-
-**Response schema:**
-```json
-{
-  "status": "success",
-  "keyword_analysis": {
-    "primary_keyword": "...",
-    "secondary_keywords": ["..."],
-    "long_tail_keywords": ["..."],
-    "keyword_roi_score": 85.0,
-    "internal_linking_suggestions": ["..."]
-  },
-  "gap": {
-    "missing_topics": ["..."],
-    "competitor_weakness": ["..."]
-  },
-  "prediction": {
-    "seo_score_predicted": 82,
-    "traffic_potential": "High",
-    "ranking_difficulty": "Medium",
-    "estimated_monthly_traffic": 14200
-  },
-  "blogs": [
-    {
-      "title": "...",
-      "content": "...",
-      "seo_score": 78,
-      "keyword_density": 1.6,
-      "readability_score": 68,
-      "ai_detection_score": 15,
-      "snippet_readiness": true,
-      "humanization_score": 85,
-      "featured_snippet": "...",
-      "platform_formats": {
-        "medium": "...",
-        "linkedin": "...",
-        "wordpress": "...",
-        "devto": "...",
-        "hashnode": "..."
-      }
-    }
-  ],
-  "blogy_analysis": {
-    "ux_issues": ["..."],
-    "seo_issues": ["..."],
-    "conversion_gaps": ["..."],
-    "technical_risks": ["..."],
-    "feature_suggestions": ["..."],
-    "product_differentiation": "...",
-    "scalability": "...",
-    "improvements_mapping": [
-      { "missing_feature": "...", "your_solution": "..." }
-    ]
-  }
-}
-```
-
----
-
-### `POST /api/generate/stream`
-
-Same inputs as `/api/generate`. Returns **Server-Sent Events** showing node-by-node progress before delivering the final result.
-
-**SSE event format:**
-```
-data: {"type": "progress", "step": 1, "node": "keyword_node"}
-data: {"type": "progress", "step": 2, "node": "serp_node"}
-...
-data: {"type": "progress", "step": 7, "node": "blogy_node"}
-data: {"type": "complete", "state": { ...full pipeline result... }}
-```
-
----
-
-### `GET /`
-
-Health check.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "engine": "AI Blog Intelligence Engine v1.0.0"
-}
-```
-
----
-
 ## 🔌 Environment Variables
 
 | Variable | Required | Description |
@@ -577,23 +408,7 @@ Health check.
 | `GROQ_API_KEY` | **Yes** | Groq inference key — get it at [console.groq.com/keys](https://console.groq.com/keys). Without this, all LLM nodes use static fallback data. |
 | `LANGCHAIN_API_KEY` | No | LangSmith API key for pipeline tracing and visualization |
 
----
 
-## 🧪 Testing
-
-```bash
-cd blogy_backend
-
-# Run all tests
-pytest tests/ -v
-
-# Run with async support
-pytest tests/ -v --asyncio-mode=auto
-```
-
-Tests cover API endpoints, pipeline node outputs, schema validation, and SSE streaming behavior using `pytest-asyncio` + `httpx`.
-
----
 
 ## 📦 Pydantic Data Models
 
@@ -610,27 +425,6 @@ BlogyAnalysis        → Node 7 output (ux, seo, conversion, technical, features
 GenerateResponse     → Full API response envelope
 PipelineState        → LangGraph shared state (carries data between all 7 nodes)
 ```
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit with conventional commits: `git commit -m "feat: add X"`
-4. Push and open a pull request
 
-Please ensure all async tests pass before submitting.
 
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-
-**Built with ❤️ using FastAPI · LangGraph · LangChain · Groq · React 19**
-
-*QuillNexus — From keyword to published content, in one pipeline.*
-
-</div>
