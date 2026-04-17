@@ -21,7 +21,6 @@
 
 The engine doesn't just generate blogs — it **researches, analyzes, validates, and exports** content across five major publishing platforms, making it a complete content operations system powered by LLMs.
 
-> ⚡ Built with **LLaMA 3.1-8B via Groq** — ultra-fast, free-tier friendly inference.
 
 ---
 
@@ -273,14 +272,6 @@ Ai_blog_Gen/
 - Dynamic platform audit with 8 analysis categories
 - Improvements mapping: competitor gaps vs. your solution
 
-### 🖥️ Frontend UX
-- Real-time pipeline progress via SSE (step 1/7 through 7/7)
-- 6-section sidebar navigation (Generate, Keywords, SERP, Performance, Blogs, Dashboard)
-- Full-screen blog reader modal with platform format tabs
-- Animated SVG score rings for SEO/readability/humanization metrics
-- ReactMarkdown rendering for blog content
-- Global state via Context + custom hook
-
 ---
 
 ## 🆚 Advantages Over Alternatives
@@ -394,7 +385,7 @@ npm run dev
 # → Frontend running at http://localhost:5173
 ```
 
-### 4. Use the App
+### 4. Use the Application
 
 1. Open `http://localhost:5173`
 2. Enter a keyword in the command bar (e.g., `"AI content marketing"`)
