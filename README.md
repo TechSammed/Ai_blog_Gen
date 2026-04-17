@@ -302,8 +302,8 @@ Ai_blog_Gen/
 - Python 3.10+
 - Node.js 18+
 
-- A [Groq API Key](https://console.groq.com/keys)
-- Langchain API
+- Groq API Key
+- Langchain API 
 
 ### 1. Clone & Navigate
 
