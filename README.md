@@ -304,8 +304,6 @@ Ai_blog_Gen/
 
 - A [Groq API Key](https://console.groq.com/keys)
 - Langchain API
-=======
-- A free [Groq API Key](https://console.groq.com/keys)
 
 ### 1. Clone & Navigate
 
