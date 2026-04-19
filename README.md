@@ -113,22 +113,18 @@ Adapts it for multiple platforms
 ## 🛠️ Tech Stack
 
 ### Backend
-
 * Python
 * FastAPI
 * LangGraph / LangChain
 
 ### Frontend
-
 * React (Vite)
 * Tailwind CSS
 
-### AI
-
+### LLM Used 
 * Groq (LLaMA 3)
 
 ### DevOps
-
 * Docker
 * Docker Compose
 
