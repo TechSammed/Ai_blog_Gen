@@ -7,8 +7,4 @@ desktop.ini
 .vscode/
 *.swp
 *.swo
-
-
-.env
-.env.local
-.env.*.local
+blogy_backend/.env
