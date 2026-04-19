@@ -336,10 +336,9 @@ LANGCHAIN_API_KEY=ls__your_key_here   # Optional — for LangSmith tracing
 ```
 
 ```bash
-# Start the backend server
+# cd blogy_backend
 uvicorn main:app --reload
 # → API running at http://localhost:8000
-# → Swagger docs at http://localhost:8000/docs
 ```
 
 ### 3. Frontend Setup
