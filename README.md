@@ -325,8 +325,8 @@ conda activate ./blogy_env
 pip install -r requirements.txt
 
 # Configure environment variables
-cp .env.example .env
-# Edit .env — add your GROQ_API_KEY
+.env
+add your Groq and Langchain API key
 ```
 
 **.env file:**
