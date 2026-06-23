@@ -3,9 +3,91 @@ import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
 import { Target, ShieldAlert, BarChart2, Lightbulb, ChevronRight } from 'lucide-react';
 
-export default function SerpSection() {
+export default function SerpSection({ isLoading = false }) {
   const { result } = useApp();
   const gap = result?.gap;
+  if (isLoading && (!gap || !gap.missing_topics || !gap.competitor_weakness)) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/*Summary Cards*/}
+        <div className="grid grid-cols-2 gap-4 animate-pulse">
+          <div className="bg-[#0a0a0c] border border-amber-500/10 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 text-amber-400 mb-4">
+              <div className="h-6 w-6 bg-white/20 rounded-flex items-center justify-center"></div>
+              <span className="font-bold text-xs uppercase tracking-wider animate-pulse" style={{ width: '100px' }}></span>
+            </div>
+            <div className="text-4xl font-bold tracking-tight text-zinc-100 mb-1 animate-pulse" style={{ width: '60px' }}></div>
+            <div className="text-zinc-500 text-xs font-medium animate-pulse" style={{ width: '150px' }}></div>
+          </div>
+
+          <div className="bg-[#0a0a0c] border border-rose-500/10 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 text-rose-400 mb-4">
+              <div className="h-6 w-6 bg-white/20 rounded-flex items-center justify-center"></div>
+              <span className="font-bold text-xs uppercase tracking-wider animate-pulse" style={{ width: '120px' }}></span>
+            </div>
+            <div className="text-4xl font-bold tracking-tight text-zinc-100 mb-1 animate-pulse" style={{ width: '60px' }}></div>
+            <div className="text-zinc-500 text-xs font-medium animate-pulse" style={{ width: '150px' }}></div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
+          {/*Missing Topics*/}
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
+            <div className="mb-6">
+              <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
+                <div className="h-5 w-5 bg-white/20 rounded-flex items-center justify-center"></div>
+                <span className="text-xs font-semibold animate-pulse" style={{ width: '80px' }}>Missing Topics</span>
+              </h3>
+              <p className="text-zinc-500 text-xs mt-1 animate-pulse" style={{ width: '200px' }}></p>
+            </div>
+
+            <div className="space-y-2.5">
+              {[1, 2, 3].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/50 border border-white/5 animate-pulse">
+                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center"></div>
+                  <span className="text-zinc-300 text-sm flex-1 font-medium animate-pulse" style={{ width: '200px' }}></span>
+                  <div className="h-3 w-3 bg-white/20 rounded-full flex items-center justify-center"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/*Competitor Weaknesses*/}
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm">
+            <div className="mb-6">
+              <h3 className="text-zinc-100 font-semibold flex items-center gap-2">
+                <div className="h-5 w-5 bg-white/20 rounded-flex items-center justify-center"></div>
+                <span className="text-xs font-semibold animate-pulse" style={{ width: '100px' }}>Competitor Weaknesses</span>
+              </h3>
+              <p className="text-zinc-500 text-xs mt-1 animate-pulse" style={{ width: '200px' }}></p>
+            </div>
+
+            <div className="space-y-2.5">
+              {[1, 2, 3].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-900/50 border border-white/5 animate-pulse">
+                  <div className="h-1.5 w-1.5 rounded-full bg-white/10"></div>
+                  <span className="text-zinc-300 text-sm flex-1 font-medium animate-pulse" style={{ width: '200px' }}></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="bg-[#0a0a0c] border border-indigo-500/20 rounded-2xl p-6 shadow-sm relative overflow-hidden animate-pulse">
+          <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/40" />
+
+          <div className="flex items-start gap-5">
+            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+              <div className="h-8 w-8 bg-white/20 rounded-flex items-center justify-center"></div>
+            </div>
+            <div>
+              <h3 className="text-zinc-100 font-bold text-base mb-2 animate-pulse" style={{ width: '180px' }}></h3>
+              <p className="text-zinc-400 text-sm leading-relaxed max-w-3xl animate-pulse" style={{ width: '100%' }}></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!gap) return <EmptyState icon={<BarChart2 size={32} className="text-zinc-600 mb-4" />} text="Generate a blog first to see SERP gap analysis" />;
 

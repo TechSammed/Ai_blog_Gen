@@ -47,7 +47,6 @@ def _enforce_density_cap(content: str, keyword: str, target_max: float = 2.0) ->
 
     replacement = "the platform"
     chars = list(content)
-    # Keep first mention and replace every second mention until density drops.
     replace_indexes = [m for i, m in enumerate(matches[1:], start=1) if i % 2 == 0]
 
     offset = 0
@@ -507,8 +506,8 @@ async def _generate_blogy_blogs() -> list[dict[str, str]]:
     results = []
     for i, config in enumerate(blog_configs):
         if i > 0:
-            logger.info("Waiting 1.5s before next blog...")
-            await asyncio.sleep(1.5)
+            logger.info("Waiting 0.5s before next blog...")
+            await asyncio.sleep(0.5)
 
         blog = await _generate_blogy_blog(config["title"], config["prompt"])
         if blog is None:
@@ -531,8 +530,8 @@ async def generate_blogs(
     general_blog = await _generate_general_blog(keyword_analysis, gap)
 
     # Wait before next batch
-    logger.info("Waiting 1.5s before Blogy blogs...")
-    await asyncio.sleep(1.5)
+    logger.info("Waiting 0.5s before Blogy blogs...")
+    await asyncio.sleep(0.5)
 
     # Blog 2 & 3: Blogy blogs
     blogy_blogs = await _generate_blogy_blogs()

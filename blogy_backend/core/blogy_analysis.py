@@ -9,7 +9,6 @@ from core.logger import get_logger
 
 logger = get_logger("blogy_analysis")
 
-# ─── STATIC FALLBACK (used when LLM fails or no blogs provided) ───
 _STATIC_ANALYSIS = BlogyAnalysis(
     ux_issues=[
         "No drag-and-drop editor — users must write raw markdown with no preview",

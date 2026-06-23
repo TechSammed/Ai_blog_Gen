@@ -13,7 +13,7 @@ from core.utils import (
 )
 
 
-# ─── keyword_density ───
+#keyword_density
 
 class TestKeywordDensity:
     def test_empty_text_returns_zero(self):
@@ -35,7 +35,7 @@ class TestKeywordDensity:
     def test_multi_word_term_fallback(self):
         text = "AI tools help with blog writing and automation of content."
         result = keyword_density(text, "AI blog automation tools India")
-        assert result > 0  # counts individual significant terms
+        assert result > 0
 
     def test_case_insensitive(self):
         text = "ai Blog AUTOMATION is here."
@@ -47,7 +47,7 @@ class TestKeywordDensity:
         assert keyword_density(text, "blockchain") == 0.0
 
 
-# ─── readability ───
+#readability 
 
 class TestReadability:
     def test_simple_text_scores_high(self):
@@ -58,7 +58,7 @@ class TestReadability:
         assert flesch_reading_ease("") == 50.0
 
 
-# ─── AI detection ───
+#AI detection 
 
 class TestAiDetection:
     def test_clean_text_low_score(self):
@@ -77,17 +77,17 @@ class TestAiDetection:
         assert humanization_score(90) == 10
 
 
-# ─── text metrics ───
+#text metrics 
 
 class TestTextMetrics:
     def test_word_count(self):
         assert word_count("one two three") == 3
 
     def test_sentence_count(self):
-        assert sentence_count("Hello world. How are you? Fine!") == 4  # 3 sentences + trailing split
+        assert sentence_count("Hello world. How are you? Fine!") == 4 
 
 
-# ─── input sanitization ───
+#input sanitization
 
 class TestSanitizeKeyword:
     def test_strips_html(self):

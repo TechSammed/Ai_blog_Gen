@@ -47,7 +47,6 @@ export async function generateBlogStream(keyword, onProgress) {
             throw new Error(event.message || 'Pipeline stream error');
           }
         } catch (e) {
-          // Skip JSON parse errors on partial chunks
           if (!(e instanceof SyntaxError)) throw e;
         }
       }
@@ -58,9 +57,6 @@ export async function generateBlogStream(keyword, onProgress) {
   return result;
 }
 
-/**
- * Non-streaming fallback — calls the original POST /api/generate endpoint.
- */
 export async function generateBlog(keyword) {
   const response = await fetch(`${API_BASE}/api/generate`, {
     method: 'POST',

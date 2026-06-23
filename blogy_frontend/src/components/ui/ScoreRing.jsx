@@ -36,7 +36,6 @@ export default function ScoreRing({ value, max = 100, label, size = 'sm' }) {
     );
   }
 
-  /* ─── Small variant (BlogsSection) ─── */
   return (
     <div className="relative flex items-center justify-center w-12 h-12">
       <svg height={radius * 2} width={radius * 2} className="transform -rotate-90 absolute inset-0">

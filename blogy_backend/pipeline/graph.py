@@ -12,9 +12,6 @@ from core.logger import get_logger
 
 logger = get_logger("pipeline")
 
-# ═══════════════════════════════════════════════════════════════
-#  FALLBACK DEFAULTS — every node has a safety net
-# ═══════════════════════════════════════════════════════════════
 
 _FALLBACK_KEYWORD = KeywordAnalysis(
     primary_keyword="AI blog automation",
@@ -37,10 +34,6 @@ _FALLBACK_PREDICTION = Prediction(
     estimated_monthly_traffic=4500,
 )
 
-
-# ═══════════════════════════════════════════════════════════════
-#  NODE FUNCTIONS — every node self-recovers, NEVER sets error
-# ═══════════════════════════════════════════════════════════════
 
 async def keyword_node(state: PipelineState) -> dict[str, Any]:
     """Node 1 — Keyword Intelligence. NEVER fails."""
@@ -149,8 +142,8 @@ async def export_node(state: PipelineState) -> dict[str, Any]:
     updated_blogs = []
     for i, blog in enumerate(state.blogs):
         if i > 0:
-            logger.info("Waiting 1.5s before next export...")
-            await asyncio.sleep(1.5)
+            logger.info("Waiting 0.5s before next export...")
+            await asyncio.sleep(0.5)
         try:
             from core.exporter import format_for_platforms
             formats = await format_for_platforms(blog.title, blog.content)
@@ -189,10 +182,6 @@ async def blogy_node(state: PipelineState) -> dict[str, Any]:
         )}
 
 
-# ═══════════════════════════════════════════════════════════════
-#  NODE-TO-STEP MAPPING (for streaming progress)
-# ═══════════════════════════════════════════════════════════════
-
 NODE_STEP_MAP = {
     "keyword_node": 1,
     "serp_node": 2,
@@ -203,10 +192,6 @@ NODE_STEP_MAP = {
     "blogy_node": 7,
 }
 
-
-# ═══════════════════════════════════════════════════════════════
-#  GRAPH CONSTRUCTION & EXECUTION
-# ═══════════════════════════════════════════════════════════════
 
 def _build_graph() -> StateGraph:
     graph = StateGraph(PipelineState)

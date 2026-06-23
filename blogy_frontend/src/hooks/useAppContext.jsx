@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback } from 'react';
 import { generateBlogStream, generateBlog } from '../api/blogApi';
 import { PIPELINE_STEPS } from '../constants/appConfig';
@@ -6,7 +5,7 @@ import { PIPELINE_STEPS } from '../constants/appConfig';
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [activeSection, setActiveSection] = useState('generate');
+  const [activeSection, setActiveSection] = useState('landing');
   const [keyword, setKeyword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pipelineStep, setPipelineStep] = useState(0);
@@ -31,7 +30,6 @@ export function AppProvider({ children }) {
     }, 1000);
 
     try {
-      // ── Strategy 1: Real-time streaming (preferred) ──
       const data = await generateBlogStream(kw, (step) => {
         setPipelineStep(step);
       });
@@ -42,9 +40,7 @@ export function AppProvider({ children }) {
     } catch (streamErr) {
       console.warn('Streaming failed, falling back to non-streaming:', streamErr.message);
 
-      // ── Strategy 2: Non-streaming fallback ──
       try {
-        // Simulate progress since we can't get real events from non-streaming
         const stepDurations = [4000, 4000, 4000, 25000, 15000, 10000, 6000];
         let currentStep = 0;
         let stepTimer;

@@ -83,10 +83,6 @@ def _build_response(state, warnings: list[str] | None = None) -> GenerateRespons
     )
 
 
-# ═══════════════════════════════════════════════════════════════
-#  ENDPOINTS
-# ═══════════════════════════════════════════════════════════════
-
 @router.post("/generate", response_model=GenerateResponse)
 async def generate_blog(payload: KeywordInput):
     """Run the full AI Blog Intelligence pipeline (non-streaming).
