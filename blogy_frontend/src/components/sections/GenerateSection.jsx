@@ -44,7 +44,7 @@ const LOADING_STEPS = [
   { label: 'Dashboard summary', helper: 'Assembling insight panels and priorities' },
 ];
 
-export default function GenerateSection() {
+export default function GenerateSection({ isLoading: isLoadingProp, ...rest }) {
   const {
     keyword,
     setKeyword,

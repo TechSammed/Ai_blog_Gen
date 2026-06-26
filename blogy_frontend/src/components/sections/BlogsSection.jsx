@@ -15,13 +15,68 @@ const PLATFORM_CONFIG = {
   hashnode: { label: 'Hashnode', activeClass: 'text-cyan-400 border-cyan-500/30 bg-cyan-500/5' },
 };
 
-export default function BlogsSection() {
+export default function BlogsSection({ isLoading = false }) {
   const { result } = useApp();
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState({});
   const [copiedId, setCopiedId] = useState(null);
 
   const blogs = result?.blogs;
+
+  if (isLoading && (!blogs || !blogs.length)) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/*Summary Row*/}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm animate-pulse">
+            <div className="flex items-center justify-center mb-3">
+              <div className="h-8 w-8 bg-white/20 rounded-lg animate-pulse"></div>
+              <div className="h-8 w-8 bg-white/20 rounded-lg animate-pulse"></div>
+              <div className="h-8 w-8 bg-white/20 rounded-lg animate-pulse"></div>
+            </div>
+            <div className="text-4xl font-bold tracking-tight text-indigo-400 mb-1 animate-pulse">--</div>
+            <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">Blogs Generated</div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm animate-pulse">
+            <div className="text-4xl font-bold tracking-tight text-blue-400 mb-1 animate-pulse">5</div>
+            <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">Export Platforms</div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm animate-pulse">
+            <div className="text-4xl font-bold tracking-tight text-emerald-400 mb-1 animate-pulse">--</div>
+            <div className="text-zinc-500 text-xs font-semibold uppercase tracking-wider">SEO Validated</div>
+          </div>
+        </div>
+
+        {/*Blog Cards*/}
+        <div className="space-y-5">
+          {[1, 2, 3].map((idx) => (
+            <div key={idx} className="bg-[#0a0a0c] border border-white/5 rounded-2xl overflow-hidden shadow-sm animate-pulse">
+              {/* Blog Card Header */}
+              <div className="p-6 pb-5">
+                <div className="flex items-start justify-between gap-6 mb-5">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 animate-pulse">
+                        Blog 0{idx}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white animate-pulse" style={{ width: '80%' }}></h3>
+                    <div className="mt-2 flex space-x-2">
+                      <div className="h-2 w-10 bg-white/20 rounded-full animate-pulse"></div>
+                      <div className="h-2 w-8 bg-white/20 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!blogs?.length) return <EmptyState icon={<PenLine size={32} className="text-zinc-600 mb-4" />} text="Generate a blog first to see your content" />;
 
@@ -42,7 +97,7 @@ export default function BlogsSection() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
 
-      {/* ─── Summary Row ─── */}
+      {/*Summary Row*/}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 text-center shadow-sm">
           <div className="text-4xl font-bold tracking-tight text-indigo-400 mb-1">{blogs.length}</div>
@@ -60,7 +115,7 @@ export default function BlogsSection() {
         </div>
       </div>
 
-      {/* ─── Blog Cards ─── */}
+      {/*Blog Cards*/}
       <div className="space-y-5">
         {blogs.map((blog, idx) => {
           const hasSeo = blog.seo_score > 0;
@@ -178,7 +233,7 @@ export default function BlogsSection() {
         })}
       </div>
 
-      {/* ─── Blog Modal ─── */}
+      {/*Blog Modal*/}
       {selectedBlog && (
         <BlogModal
           blog={selectedBlog.blog}

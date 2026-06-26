@@ -3,9 +3,130 @@ import { useApp } from '../../hooks/useAppContext';
 import EmptyState from '../ui/EmptyState';
 import { Tag, Star, Link2, TrendingUp, Search } from 'lucide-react';
 
-export default function KeywordsSection() {
+export default function KeywordsSection({ isLoading = false }) {
   const { result } = useApp();
   const kw = result?.keyword_analysis;
+
+  if (isLoading && (!kw || Object.keys(kw).length === 0)) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Header Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse" style={{ width: '70%' }}></h3>
+            </div>
+            <div className="mt-2 flex space-x-2">
+              <div className="h-2 w-10 bg-white/20 rounded-full animate-pulse"></div>
+              <div className="h-2 w-8 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <span className="font-semibold text-white animate-pulse">ROI Score</span>
+            </div>
+            <div className="mt-2 flex space-x-2">
+              <div className="h-2 w-10 bg-white/20 rounded-full animate-pulse"></div>
+              <div className="h-2 w-8 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse" style={{ width: '70%' }}></h3>
+            </div>
+            <div className="mt-2 flex space-x-2">
+              <div className="h-2 w-10 bg-white/20 rounded-full animate-pulse"></div>
+              <div className="h-2 w-8 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse" style={{ width: '70%' }}></h3>
+            </div>
+            <div className="mt-2 flex space-x-2">
+              <div className="h-2 w-10 bg-white/20 rounded-full animate-pulse"></div>
+              <div className="h-2 w-8 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* ROI Score Bar */}
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+            <h3 className="font-semibold text-white animate-pulse">Keyword ROI Score</h3>
+          </div>
+          <div className="h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="h-full bg-white/20 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+          </div>
+          <div className="flex justify-between text-xs text-zinc-500 mt-2 font-medium animate-pulse">
+            <span>0%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Secondary Keywords */}
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse">Secondary Keywords</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5].map((_, i) => (
+                <span key={i} className="px-3.5 py-1.5 rounded-lg bg-blue-500/5 border border-blue-500/10 text-blue-300 text-sm font-medium animate-pulse">
+                  Keyword
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Long-tail Keywords */}
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse">Long-tail Keywords</h3>
+            </div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-zinc-900/50 border border-white/5 animate-pulse">
+                  <span className="text-zinc-600 text-xs font-mono font-bold w-5">01</span>
+                  <span className="text-zinc-200 eff-1 truncate animate-pulse" style={{ width: '100px' }}></span>
+                  <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden shrink-0">
+                    <div className="h-full rounded-full bg-teal-500" style={{ width: '70%' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Internal Linking */}
+        {true && (
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse"></div>
+              <h3 className="font-semibold text-white animate-pulse">Internal Linking Suggestions</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/5 border border-orange-500/10 animate-pulse">
+                  <div className="p-1.5 rounded-md bg-orange-500/10">
+                    <div className="h-5 w-5 bg-white/20 rounded-full flex items-center justify-center animate-pulse"></div>
+                  </div>
+                  <span className="text-orange-200/90 text-sm font-medium truncate animate-pulse" style={{ width: '150px' }}></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!kw) {
     return (
