@@ -8,3 +8,4 @@ desktop.ini
 *.swp
 *.swo
 blogy_backend/.env
+blogy_frontend/.env

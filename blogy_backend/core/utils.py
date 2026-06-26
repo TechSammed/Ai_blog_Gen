@@ -1,13 +1,18 @@
-
 from __future__ import annotations
 
 import asyncio
 import os
 import re
+import time
+from typing import Any, Union, List, Tuple
 
 from core.logger import get_logger
 
 logger = get_logger("utils")
+
+# Simple cache for LLM responses to avoid redundant calls for identical prompts
+_llm_cache: dict[str, Tuple[Any, float]] = {}
+CACHE_TTL = 3600  # 1 hour in seconds
 
 
 def get_llm(temperature: float = 0.3, max_tokens: int = 4000):
@@ -21,12 +26,55 @@ def get_llm(temperature: float = 0.3, max_tokens: int = 4000):
     )
 
 
+async def safe_llm_call(
+    prompt: Union[str, List[Any]],
+    temperature: float = 0.3,
+    max_tokens: int = 4000,
+    max_retries: int = 3,
+):
+    """Call an LLM with automatic retry on rate limits and caching for identical prompts.
 
-async def safe_llm_call(func, *args, max_retries: int = 3):
-    """Call an async LLM function with automatic retry on rate limits."""
+    Args:
+        prompt: Either a string prompt or a list of message objects (from langchain)
+        temperature: Sampling temperature
+        max_tokens: Maximum tokens to generate
+        max_retries: Number of retry attempts on rate limit
+    """
+    # Create a cache key from the prompt and parameters
+    if isinstance(prompt, str):
+        cache_key = (prompt, temperature, max_tokens)
+    else:
+        # Assume it's a list of message objects with 'type' and 'content' attributes
+        # Convert to a tuple of (type, content) for hashing
+        try:
+            message_tuples = tuple((msg.type, msg.content) for msg in prompt)
+            cache_key = (message_tuples, temperature, max_tokens)
+        except AttributeError:
+            # Fallback: use string representation if objects don't have expected attributes
+            cache_key = (str(prompt), temperature, max_tokens)
+
+    # Check cache
+    current_time = time.time()
+    if cache_key in _llm_cache:
+        cached_result, timestamp = _llm_cache[cache_key]
+        if current_time - timestamp < CACHE_TTL:
+            logger.debug("Returning cached LLM response")
+            return cached_result
+        else:
+            # Remove expired cache entry
+            del _llm_cache[cache_key]
+
+    # If not in cache or expired, create LLM and call with retries
+    llm = get_llm(temperature=temperature, max_tokens=max_tokens)
+
     for attempt in range(max_retries):
         try:
-            return await func(*args)
+            logger.debug("Calling LLM (attempt %d/%d)", attempt + 1, max_retries)
+            result = await llm.ainvoke(prompt)
+            # Cache the successful result
+            _llm_cache[cache_key] = (result, current_time)
+            logger.debug("Cached LLM response")
+            return result
         except Exception as e:
             error_str = str(e).lower()
             if "rate_limit" in error_str or "429" in error_str or "too many" in error_str:
@@ -34,9 +82,11 @@ async def safe_llm_call(func, *args, max_retries: int = 3):
                 logger.warning("Rate limit hit, waiting %ds (attempt %d/%d)", wait_time, attempt + 1, max_retries)
                 await asyncio.sleep(wait_time)
             else:
+                logger.error("LLM call failed with non-rate-limit error: %s", e)
                 raise e
-    return await func(*args)
-
+    # If we exhausted retries, try one last time without caching (to avoid caching a failure)
+    logger.error("LLM call failed after %d retries, raising last error", max_retries)
+    return await llm.ainvoke(prompt)
 
 
 def word_count(text: str) -> int:
@@ -142,7 +192,7 @@ def humanization_score(ai_score: int) -> int:
 
 def sanitize_keyword(keyword: str) -> str:
     """Sanitize user keyword input."""
-    keyword = re.sub(r'<[^>]+>', '', keyword)       
-    keyword = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', keyword)  
-    keyword = ' '.join(keyword.split())             
+    keyword = re.sub(r'<[^>]+>', '', keyword)
+    keyword = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', keyword)
+    keyword = ' '.join(keyword.split())
     return keyword.strip()

@@ -128,21 +128,18 @@ def _split_long_sentences(content: str) -> str:
 
 async def _clean_for_density(blog: str, keyword: str) -> str:
     """LLM rewrite to fix keyword density. ALWAYS runs after generation."""
-    async def _do_clean():
-        llm = get_llm(temperature=0.5, max_tokens=4000)
-        prompt = (
-            f"Rewrite the blog to:\n"
-            f"- Reduce keyword repetition\n"
-            f"- Maintain meaning\n"
-            f"- Keep keyword density between 1%–2% for \"{keyword}\"\n"
-            f"- Improve readability\n\n"
-            f"Return ONLY cleaned blog text.\n\n"
-            f"BLOG:\n{blog}"
-        )
-        result = await llm.ainvoke(prompt)
-        return result.content
-
-    return await safe_llm_call(_do_clean)
+    prompt = (
+        f"Rewrite the blog to:\n"
+        f"- Reduce keyword repetition\n"
+        f"- Maintain meaning\n"
+        f"- Keep keyword density between 1%–2% for \"{keyword}\"\n"
+        f"- Improve readability\n"
+        f"- Avoid AI-sounding phrases like 'the future looks bright', 'in today\\'s world', 'has shown promise', 'rapidly evolving', 'revolutionizing', 'game-changer', 'dive deep', 'harness the power', 'it\\'s important to note', 'without further ado', 'at the end of the day', 'in conclusion', 'leverage the power', 'in the ever-evolving', 'in this day and age', 'needless to say', 'it goes without saying', 'as we all know', 'the landscape is changing', 'paradigm shift', 'synergy', 'unlock the potential', 'unlock the power', 'the bottom line is', 'to put it simply', 'at the forefront', 'cutting-edge', 'groundbreaking'\n\n"
+        f"Return ONLY cleaned blog text.\n\n"
+        f"BLOG:\n{blog}"
+    )
+    result = await safe_llm_call(prompt, temperature=0.3, max_tokens=4000)
+    return result.content
 
 
 async def _quality_pipeline(blog_content: str, keyword: str) -> str:
@@ -373,6 +370,10 @@ async def _generate_general_blog(
                 - Paragraphs: 2–3 lines max
                 - No generic phrases like "revolutionizing", "game-changer", "dive deep",
                   "in today's world", "cutting-edge", "groundbreaking"
+                - Avoid AI-sounding clichés such as: "the future looks bright", "in today's world",
+                  "has shown promise", "rapidly evolving", "revolutionizing", "game-changer",
+                  "dive deep", "harness the power", "it's important to note", "without further ado",
+                  "at the end of the day", "in conclusion"
 
                 Secondary keywords: {secondary}
                 Long-tail keywords: {longtail}
@@ -395,7 +396,7 @@ async def _generate_general_blog(
         ])
 
         async def _do_generate():
-            llm = get_llm(temperature=0.5, max_tokens=4000)
+            llm = get_llm(temperature=0.3, max_tokens=4000)
             return await llm.ainvoke(
                 prompt.format_messages(
                     keyword=kw,
@@ -406,7 +407,17 @@ async def _generate_general_blog(
                 )
             )
 
-        result_msg = await safe_llm_call(_do_generate)
+        result_msg = await safe_llm_call(
+            prompt.format_messages(
+                keyword=kw,
+                secondary=secondary,
+                longtail=longtail,
+                missing_bullets=missing_bullets,
+                weakness_bullets=weakness_bullets,
+            ),
+            temperature=0.3,
+            max_tokens=4000,
+        )
         content = result_msg.content
 
         title = kw.title()
@@ -447,6 +458,12 @@ async def _generate_blogy_blog(title: str, specific_prompt: str) -> dict[str, st
                 - Human tone, readable, not robotic
                 - Short sentences (max 20 words)
                 - Paragraphs: 2–3 lines max
+                - No generic phrases like "revolutionizing", "game-changer", "dive deep",
+                  "in today's world", "cutting-edge", "groundbreaking"
+                - Avoid AI-sounding clichés such as: "the future looks bright", "in today's world",
+                  "has shown promise", "rapidly evolving", "revolutionizing", "game-changer",
+                  "dive deep", "harness the power", "it's important to note", "without further ado",
+                  "at the end of the day", "in conclusion"
 
                 {specific_prompt}
 
@@ -457,10 +474,14 @@ async def _generate_blogy_blog(title: str, specific_prompt: str) -> dict[str, st
         ])
 
         async def _do_generate():
-            llm = get_llm(temperature=0.5, max_tokens=4000)
+            llm = get_llm(temperature=0.3, max_tokens=4000)
             return await llm.ainvoke(prompt.format_messages())
 
-        msg = await safe_llm_call(_do_generate)
+        msg = await safe_llm_call(
+            prompt.format_messages(),
+            temperature=0.3,
+            max_tokens=4000,
+        )
 
         logger.info("Blogy blog raw: %d words", len(msg.content.split()))
         content = await _quality_pipeline(msg.content, "Blogy")
