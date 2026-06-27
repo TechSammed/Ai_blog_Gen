@@ -71,9 +71,57 @@ const PRIORITY_BUCKETS = [
   { id: 'low', label: 'Low Priority', description: 'Iterative improvements', tone: 'violet', keys: ['feature_suggestions'] },
 ];
 
-export default function NexusSection() {
+export default function NexusSection({ isLoading = false }) {
   const { result } = useApp();
   const analysis = result?.blogy_analysis;
+
+  // Show skeleton when loading and no data yet
+  if (isLoading && (!analysis || Object.keys(analysis).length === 0)) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Header placeholder */}
+        <div className="bg-[#0f1117] border border-white/5 rounded-2xl p-6 animate-pulse">
+          <h3 className="text-zinc-100 font-semibold animate-pulse" style={{ width: '60%' }}></h3>
+          <p className="text-zinc-400 text-sm mt-1 animate-pulse" style={{ width: '80%' }}></p>
+        </div>
+        {/* Summary stats row */}
+        <div className="grid grid-cols-2 gap-4 animate-pulse">
+          {[1, 2, 3, 4].map((_, i) => (
+            <div key={i} className="bg-[#0f1117] border border-white/5 rounded-2xl p-4 animate-pulse">
+              <h3 className="text-zinc-100 font-semibold mb-2 animate-pulse" style={{ width: '50%' }}></h3>
+              <p className="text-zinc-400 text-xs animate-pulse" style={{ width: '70%' }}></p>
+            </div>
+          ))}
+        </div>
+        {/* Two column main content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
+          {/* Left: Donut chart placeholder */}
+          <div className="bg-[#0f1117] border border-white/5 rounded-2xl p-6 animate-pulse">
+            <h3 className="text-zinc-100 font-semibold mb-2 animate-pulse" style={{ width: '60%' }}></h3>
+            <div className="h-20 w-full bg-white/10 rounded-full animate-pulse"></div>
+          </div>
+          {/* Right: three stats placeholder */}
+          <div className="space-y-4 animate-pulse">
+            {[1, 2, 3].map((_, i) => (
+              <div key={i} className="bg-[#0f1117] border border-white/5 rounded-2xl p-4 animate-pulse">
+                <h3 className="text-zinc-100 font-semibold mb-2 animate-pulse" style={{ width: '60%' }}></h3>
+                <p className="text-zinc-400 text-xs animate-pulse" style={{ width: '70%' }}></p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <EmptyState
+        icon={<Layers size={32} className="text-zinc-600 mb-4" />}
+        text="Generate a blog first to see dashboard analysis"
+      />
+    );
+  }
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -154,15 +202,6 @@ export default function NexusSection() {
       .toLowerCase()
       .includes(normalizedQuery);
   });
-
-  if (!analysis) {
-    return (
-      <EmptyState
-        icon={<Layers size={32} className="text-zinc-600 mb-4" />}
-        text="Generate a blog first to see dashboard analysis"
-      />
-    );
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">

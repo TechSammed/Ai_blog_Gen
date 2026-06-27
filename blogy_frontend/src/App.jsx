@@ -7,6 +7,7 @@ import SerpSection from './components/sections/SerpSection';
 import PredictionSection from './components/sections/PredictionSection';
 import BlogsSection from './components/sections/BlogsSection';
 import InsightSection from './components/sections/NexusSection';
+import LandingSection from './components/sections/LandingSection';
 
 const SECTION_MAP = {
   generate: GenerateSection,
@@ -15,11 +16,12 @@ const SECTION_MAP = {
   prediction: PredictionSection,
   blogs: BlogsSection,
   insight: InsightSection,
+  landing: LandingSection,
 };
 
 export default function App() {
-  const { activeSection, sidebarOpen } = useApp();
-  const ActiveComponent = SECTION_MAP[activeSection] || GenerateSection;
+  const { activeSection, sidebarOpen, isLoading } = useApp();
+  const Component = SECTION_MAP[activeSection];
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -32,7 +34,7 @@ export default function App() {
         className={`min-h-screen transition-all duration-300 relative z-10 pt-16 pl-0 md:pl-16 ${sidebarOpen ? 'md:pl-64' : ''}`}
       >
         <div className="max-w-6xl mx-auto px-6 py-8">
-          <ActiveComponent key={activeSection} />
+          {Component && <Component isLoading={isLoading} />}
         </div>
       </main>
     </div>

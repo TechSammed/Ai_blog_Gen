@@ -7,9 +7,62 @@ import {
   Target, Rocket, Swords, Clock
 } from 'lucide-react';
 
-export default function PredictionSection() {
+export default function PredictionSection({ isLoading = false }) {
   const { result } = useApp();
   const p = result?.prediction;
+  if (isLoading && !p) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/*Main Metrics*/}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {/* Custom, Flat SEO Score Ring */}
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-5 flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
+            <div className="h-12 w-12 bg-white/10 rounded-full flex items-center justify-center"></div>
+          </div>
+
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-4">
+            <div className="h-4 w-20 bg-white/10 rounded-full"></div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-4">
+            <div className="h-4 w-16 bg-white/10 rounded-full"></div>
+          </div>
+          <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-4">
+            <div className="h-4 w-20 bg-white/10 rounded-full"></div>
+          </div>
+        </div>
+
+        {/*Traffic Projection Bar Chart */}
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+          <div className="h-4 w-20 bg-white/10 rounded-full mb-4"></div>
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <span className="text-zinc-400 text-xs font-medium w-20 shrink-0"></span>
+                <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-white/20 rounded-full"></div>
+                </div>
+                <span className="text-zinc-200 text-xs font-mono font-medium w-16 text-right"></span>
+                <span className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider w-24 hidden sm:block"></span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/*Insights*/}
+        <div className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-6 shadow-sm animate-pulse">
+          <div className="h-4 w-20 bg-white/10 rounded-full mb-4"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map((_, i) => (
+              <div key={i} className="rounded-xl p-4 bg-zinc-900/50 border border-white/5">
+                <div className="h-4 w-8 bg-white/10 rounded-full mb-2"></div>
+                <p className="text-zinc-400 text-sm leading-relaxed"></p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!p) {
     return (
